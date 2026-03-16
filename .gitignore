@@ -2,3 +2,15 @@
 __pycache__/
 *.pyc
 .DS_Store
+CLAUDE.md
+.github/
+
+# Data Science & Jupyter
+.ipynb_checkpoints/
+data/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
