@@ -9,6 +9,73 @@ créer un modèle de recommandation et fournir une liste de films
 recommandés pour différents utilisateurs.
 
 
+## Setup WSL
+1. Système et Java
+
+``` shell
+sudo apt update && sudo apt upgrade -y
+sudo apt install openjdk-17-jdk unzip -y
+java -version
+```
+2. Installation de uv (Gestionnaire Python)
+C'est l'outil de gestion d'environnement.   
+Sous Linux, on l'installe généralement via leur script officiel :
+
+```shell
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.cargo/env  # Pour activer la commande 'uv' immédiatement
+``` 
+
+3. Git et Sécurité (Le pont vers GitHub)
+```shell
+# Configuration de l'identité
+git config --global user.email "bruno.coulet@laplateforme.io"
+git config --global user.name "bruno-coulet"
+
+# Génération de la clé
+ssh-keygen -t ed25519 -C "bruno.coulet@laplateforme.io"
+# (Ici, copier le contenu de ~/.ssh/id_ed25519.pub sur GitHub)
+
+# Bascule du dépôt existant vers SSH
+git remote set-url origin git@github.com:bruno-coulet/sparkle-movie.git
+
+git config --global user.email "bruno.coulet@laplateforme.io"
+git config --global user.name "bruno-coulet"
+``` 
+
+
+4. Structure du Projet et Données
+
+```shell
+mkdir -p data/raw/small data/processed src
+cd data/raw/small
+wget https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+# installer l'outil pour dezipper
+sudo apt update && sudo apt install unzip
+# Dézipper
+unzip ml-latest-small.zip
+# On déplace le contenu du dossier extrait vers le dossier courant (.)
+mv ml-latest-small/* .
+# suprime le fichier zip
+rm -rf ml-latest-small.zip
+# Revenir à la racine du projet
+cd ../../..
+```
+
+5. Environnement Python avec uv
+
+```shell
+uv venv                       # Créer l'environnement
+source .venv/bin/activate     # L'activer
+uv add pyspark                # Installer les dépendances
+```
+
+
+
+
+
+
+
 ### Le dataset contient les informations suivantes :
 1. ratings.csv : Les notes attribuées par les utilisateurs aux films.
 ○ **userId, movieId, rating, timestamp**
@@ -22,28 +89,6 @@ recommandés pour différents utilisateurs.
 ● Récupérez le dataset [MovieLens](https://grouplens.org/datasets/movielens/),   
 différentes tailles sont disponibles selon les ressources.
 
-``` ubuntu
-sudo apt update
-
-sudo apt install openjdk-17-jdk -y
-
-java -version
-
-wget https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-
-sudo apt update && sudo apt install unzip
-
-unzip ml-latest-small.
-
-
-ssh-keygen -t ed25519 -C "ton_email@example.com"
-
-
-git remote set-url origin git@github.com:bruno-coulet/sparkle-movie.git
-
-coule@PC-de-Bruno:~/Desktop/Documents/projets/sparkle-movie$ git config --global user.email "bruno.coulet@laplateforme.io"
-coule@PC-de-Bruno:~/Desktop/Documents/projets/sparkle-movie$ git config --global user.name "bruno-coulet"
-```
 
 ### 2. Chargement et exploration des données
 ● Importez les fichiers ratings.csv et movies.csv dans des DataFrames
