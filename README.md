@@ -22,6 +22,29 @@ recommandés pour différents utilisateurs.
 ● Récupérez le dataset [MovieLens](https://grouplens.org/datasets/movielens/),   
 différentes tailles sont disponibles selon les ressources.
 
+``` ubuntu
+sudo apt update
+
+sudo apt install openjdk-17-jdk -y
+
+java -version
+
+wget https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+
+sudo apt update && sudo apt install unzip
+
+unzip ml-latest-small.
+
+
+ssh-keygen -t ed25519 -C "ton_email@example.com"
+
+
+git remote set-url origin git@github.com:bruno-coulet/sparkle-movie.git
+
+coule@PC-de-Bruno:~/Desktop/Documents/projets/sparkle-movie$ git config --global user.email "bruno.coulet@laplateforme.io"
+coule@PC-de-Bruno:~/Desktop/Documents/projets/sparkle-movie$ git config --global user.name "bruno-coulet"
+```
+
 ### 2. Chargement et exploration des données
 ● Importez les fichiers ratings.csv et movies.csv dans des DataFrames
 Spark.

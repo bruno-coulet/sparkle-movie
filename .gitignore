@@ -5,6 +5,9 @@ __pycache__/
 CLAUDE.md
 .github/
 
+data/
+src/test*
+
 # Data Science & Jupyter
 .ipynb_checkpoints/
 data/
