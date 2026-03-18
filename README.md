@@ -70,6 +70,15 @@ source .venv/bin/activate     # L'activer
 uv add pyspark                # Installer les dépendances
 ```
 
+installer le kernel pour pouvoir utiliser le notebook
+```shell
+uv run python -m ipykernel install --user --name sparkle-movie --display-name sparkle-movie
+```
+Lancer Jupyter depuis WSL
+```shell
+jupyter lab
+```
+
 
 
 

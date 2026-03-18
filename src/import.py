@@ -11,8 +11,8 @@ from pyspark.sql.types import FloatType, IntegerType, LongType, StringType, Stru
 def create_spark_session() -> SparkSession:
     """Cree et retourne une session Spark locale."""
     return (
-        SparkSession.builder
-        .appName("MovieLens")
+        SparkSession.builder.appName("MovieLens")
+        # Détermine combien de coeurs CPU utiliser pour l'exécution locale.
         .master("local[*]")
         # permet de réutiliser une session existante si elle est déjà créée, ou d’en créer une nouvelle sinon.
         .getOrCreate()
@@ -58,8 +58,8 @@ def main() -> None:
     """Point d'entree: charge les CSV et cree les DataFrames Spark."""
     spark = create_spark_session()
 
-    path_ratings = "data/raw/small/ratings.csv"
-    path_movies = "data/raw/small/movies.csv"
+    path_ratings = "data/raw_small/ratings.csv"
+    path_movies = "data/raw_small/movies.csv"
 
     try:
         df_ratings = load_ratings_dataframe(spark, path_ratings)
@@ -83,9 +83,9 @@ def main() -> None:
         df_ratings.write.mode("overwrite").parquet("data/processed/ratings_clean.parquet")
         df_movies.write.mode("overwrite").parquet("data/processed/movies_clean.parquet")
 
-        print("\nIngestion terminee avec succes.")
+        print("\nImport terminee avec succes.")
     except Exception as exc:
-        print(f"Erreur lors de l'ingestion: {exc}")
+        print(f"Erreur lors de l'import: {exc}")
     finally:
         spark.stop()
 
