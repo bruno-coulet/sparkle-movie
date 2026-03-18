@@ -7,6 +7,7 @@ CLAUDE.md
 
 data/
 src/test*
+test*
 
 # Data Science & Jupyter
 .ipynb_checkpoints/

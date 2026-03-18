@@ -29,18 +29,18 @@ source $HOME/.cargo/env  # Pour activer la commande 'uv' immédiatement
 3. Git et Sécurité (Le pont vers GitHub)
 ```shell
 # Configuration de l'identité
-git config --global user.email "bruno.coulet@laplateforme.io"
-git config --global user.name "bruno-coulet"
+git config --global user.email "..."
+git config --global user.name "..."
 
 # Génération de la clé
-ssh-keygen -t ed25519 -C "bruno.coulet@laplateforme.io"
+ssh-keygen -t ed25519 -C "..."
 # (Ici, copier le contenu de ~/.ssh/id_ed25519.pub sur GitHub)
 
 # Bascule du dépôt existant vers SSH
 git remote set-url origin git@github.com:bruno-coulet/sparkle-movie.git
 
-git config --global user.email "bruno.coulet@laplateforme.io"
-git config --global user.name "bruno-coulet"
+git config --global user.email "..."
+git config --global user.name "..."
 ``` 
 
 
