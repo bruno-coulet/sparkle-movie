@@ -58,7 +58,6 @@ def load_movies_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
         .csv(csv_path)
     )
 
-
 def load_dataframes(spark: SparkSession) -> Tuple[DataFrame, DataFrame]:
     """Charge ratings.csv et movies.csv avec schémas explicites."""
     ratings_schema = StructType(
