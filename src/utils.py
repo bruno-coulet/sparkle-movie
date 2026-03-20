@@ -18,8 +18,13 @@ from pyspark.sql.types import FloatType, IntegerType, LongType, StringType, Stru
 DataSource = Literal["raw_small", "raw_big", "processed_small", "processed_big"]
 
 def get_project_root() -> Path:
-    """Retourne la racine du projet, peu importe d'où le code est lancé."""
-    # __file__ est le chemin de utils.py, .parent est src/, .parent.parent est la racine
+    """Retourne la racine du projet, peu importe d'où le code est lancé
+    __file__        : chemin absolu du fichier courant
+    Path(__file__)  : convertit en objet Path
+    .resolve()      : résout le chemin vers sa forme absolue réelle (utile si symlinks ou chemins relatifs)
+    .parent         : remonte d'un niveau → src
+    .parent.parent  : remonte encore d'un niveau → sparkle-movie (la racine!)
+    """
     return Path(__file__).resolve().parent.parent
 
 def create_spark_session() -> SparkSession:
@@ -70,25 +75,6 @@ def resolve_data_source_paths(
         )
 
     return dataset_format, path_ratings, path_movies
-
-def load_data_source(
-    spark: SparkSession,
-    source: DataSource,
-    project_root: Path | None = None,
-) -> tuple[DataFrame, DataFrame, str, Path, Path]:
-    """Charge ratings/movies selon la source et retourne DataFrames + métadonnées."""
-    dataset_format, path_ratings, path_movies = resolve_data_source_paths(
-        source, project_root=project_root
-    )
-
-    if dataset_format == "csv":
-        df_ratings = load_ratings_dataframe(spark, path_ratings.as_posix())
-        df_movies = load_movies_dataframe(spark, path_movies.as_posix())
-    else:
-        df_ratings = spark.read.parquet(path_ratings.as_posix())
-        df_movies = spark.read.parquet(path_movies.as_posix())
-
-    return df_ratings, df_movies, dataset_format, path_ratings, path_movies
 
 def load_ratings_dataframe(spark: SparkSession, relative_path: str) -> DataFrame:
     """Charge ratings.csv avec un schéma explicite.
@@ -142,38 +128,22 @@ def load_movies_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
         .csv(csv_path)
     )
 
-def load_dataframes(spark: SparkSession) -> Tuple[DataFrame, DataFrame]:
-    """Charge ratings.csv et movies.csv avec schémas explicites."""
-    ratings_schema = StructType(
+
+def load_links_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
+    """Charge links.csv avec un schema explicite."""
+    links_schema = StructType(
         [
-            StructField("userId", IntegerType(), True),
             StructField("movieId", IntegerType(), True),
-            StructField("rating", FloatType(), True),
-            StructField("timestamp", LongType(), True),
+            StructField("imdbId", IntegerType(), True),
+            StructField("tmdbId", IntegerType(), True),
         ]
     )
 
-    movies_schema = StructType(
-        [
-            StructField("movieId", IntegerType(), True),
-            StructField("title", StringType(), True),
-            StructField("genres", StringType(), True),
-        ]
-    )
-
-    df_ratings = (
+    return (
         spark.read.options(header=True, sep=",")
-        .schema(ratings_schema)
-        .csv("data/raw_small/ratings.csv")
+        .schema(links_schema)
+        .csv(csv_path)
     )
-
-    df_movies = (
-        spark.read.options(header=True, sep=",")
-        .schema(movies_schema)
-        .csv("data/raw_small/movies.csv")
-    )
-
-    return df_ratings, df_movies
 
 def clean_data(df_ratings: DataFrame, df_movies: DataFrame) -> Tuple[DataFrame, DataFrame]:
     """Nettoie les DataFrames: valeurs manquantes, doublons et qualité minimale."""
@@ -307,7 +277,9 @@ def main() -> None:
     """Exécute le pipeline complet d'import, nettoyage, analyse et visualisation."""
     spark = create_spark_session()
     try:
-        df_ratings, df_movies = load_dataframes(spark)
+        _, path_ratings, path_movies = resolve_data_source_paths("raw_small")
+        df_ratings = load_ratings_dataframe(spark, path_ratings.as_posix())
+        df_movies = load_movies_dataframe(spark, path_movies.as_posix())
         preview_data(df_ratings, df_movies)
 
         df_ratings_clean, df_movies_clean = clean_data(df_ratings, df_movies)
