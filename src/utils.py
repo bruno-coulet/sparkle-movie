@@ -9,11 +9,16 @@ Module d'ingestion Spark pour MovieLens (version small).
 """
 
 from typing import Tuple
+from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import avg, col, count, desc, explode, split
 from pyspark.sql.types import FloatType, IntegerType, LongType, StringType, StructField, StructType
 
+def get_project_root() -> Path:
+    """Retourne la racine du projet, peu importe d'où le code est lancé."""
+    # __file__ est le chemin de utils.py, .parent est src/, .parent.parent est la racine
+    return Path(__file__).resolve().parent.parent
 
 def create_spark_session() -> SparkSession:
     """Cree et retourne une session Spark locale."""
@@ -25,8 +30,11 @@ def create_spark_session() -> SparkSession:
         .getOrCreate()
     )
 
-def load_ratings_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
+def load_ratings_dataframe_OLD(spark: SparkSession, csv_path: str) -> DataFrame:
     """Charge ratings.csv avec un schema explicite."""
+    # On convertit en Path puis en string absolue
+    absolute_path = str(Path(csv_path).absolute())
+
     ratings_schema = StructType(
         [
             StructField("userId", IntegerType(), True),
@@ -39,8 +47,41 @@ def load_ratings_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
     return (
         spark.read.options(header=True, sep=",")
         .schema(ratings_schema)
-        .csv(csv_path)
+        .csv(absolute_path)
     )
+
+def load_ratings_dataframe(spark: SparkSession, relative_path: str) -> DataFrame:
+    """Charge ratings.csv avec un schéma explicite.
+       Version robuste pour macOS / WSL / Windows.
+    """
+    # 1. On récupère la racine et on construit le chemin complet
+    # .resolve() transforme le chemin en chemin absolu réel
+    path_objet = (get_project_root() / relative_path).resolve()
+
+    # 2. Vérification de sécurité (Python vérifie si le fichier est là)
+    if not path_objet.exists():
+        raise FileNotFoundError(f"Fichier introuvable : {path_objet}")
+
+    # 3. Définition du schéma
+    ratings_schema = StructType([
+        StructField("userId", IntegerType(), True),
+        StructField("movieId", IntegerType(), True),
+        StructField("rating", FloatType(), True),
+        StructField("timestamp", LongType(), True),
+    ])
+
+    # 4. Conversion en STRING pour Spark
+    # Sur Mac, on force le format string simple du chemin absolu
+    path_final = str(path_objet)
+
+    return (
+        spark.read.format("csv")
+        .option("header", "true")
+        .option("sep", ",")
+        .schema(ratings_schema)
+        .load(path_final) # Spark prend la string ici
+    )
+
 
 def load_movies_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
     """Charge movies.csv avec un schema explicite."""
