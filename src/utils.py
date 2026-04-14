@@ -8,16 +8,23 @@ Module d'ingestion Spark pour MovieLens (version small).
 - main charge ratings et movies avec schemas explicites, puis montre une jointure de verification.
 """
 
-from typing import Tuple
+from typing import Literal, Tuple
 from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import avg, col, count, desc, explode, split
 from pyspark.sql.types import FloatType, IntegerType, LongType, StringType, StructField, StructType
 
+DataSource = Literal["raw_small", "raw_big", "processed_small", "processed_big"]
+
 def get_project_root() -> Path:
-    """Retourne la racine du projet, peu importe d'où le code est lancé."""
-    # __file__ est le chemin de utils.py, .parent est src/, .parent.parent est la racine
+    """Retourne la racine du projet, peu importe d'où le code est lancé
+    __file__        : chemin absolu du fichier courant
+    Path(__file__)  : convertit en objet Path
+    .resolve()      : résout le chemin vers sa forme absolue réelle (utile si symlinks ou chemins relatifs)
+    .parent         : remonte d'un niveau → src
+    .parent.parent  : remonte encore d'un niveau → sparkle-movie (la racine!)
+    """
     return Path(__file__).resolve().parent.parent
 
 def create_spark_session() -> SparkSession:
@@ -30,33 +37,55 @@ def create_spark_session() -> SparkSession:
         .getOrCreate()
     )
 
-def load_ratings_dataframe_OLD(spark: SparkSession, csv_path: str) -> DataFrame:
-    """Charge ratings.csv avec un schema explicite."""
-    # On convertit en Path puis en string absolue
-    absolute_path = str(Path(csv_path).absolute())
+def resolve_data_source_paths(
+    source: DataSource,
+    project_root: Path | None = None,
+) -> tuple[str, Path, Path]:
+    """Résout le format et les chemins ratings/movies selon la source demandée."""
+    root = project_root or get_project_root()
+    data_root = root / "data"
 
-    ratings_schema = StructType(
-        [
-            StructField("userId", IntegerType(), True),
-            StructField("movieId", IntegerType(), True),
-            StructField("rating", FloatType(), True),
-            StructField("timestamp", LongType(), True),
-        ]
-    )
+    sources: dict[DataSource, tuple[str, Path, Path]] = {
+        "raw_small": (
+            "csv",
+            data_root / "raw_small" / "ratings.csv",
+            data_root / "raw_small" / "movies.csv",
+        ),
+        "raw_big": (
+            "csv",
+            data_root / "raw_big" / "ratings.csv",
+            data_root / "raw_big" / "movies.csv",
+        ),
+        "processed_small": (
+            "parquet",
+            data_root / "processed" / "small" / "ratings_clean.parquet",
+            data_root / "processed" / "small" / "movies_clean.parquet",
+        ),
+        "processed_big": (
+            "parquet",
+            data_root / "processed" / "big" / "ratings_clean.parquet",
+            data_root / "processed" / "big" / "movies_clean.parquet",
+        ),
+    }
 
-    return (
-        spark.read.options(header=True, sep=",")
-        .schema(ratings_schema)
-        .csv(absolute_path)
-    )
+    dataset_format, path_ratings, path_movies = sources[source]
+    if not path_ratings.exists() or not path_movies.exists():
+        raise FileNotFoundError(
+            f"Fichiers introuvables pour source={source}: {path_ratings} | {path_movies}"
+        )
+
+    return dataset_format, path_ratings, path_movies
 
 def load_ratings_dataframe(spark: SparkSession, relative_path: str) -> DataFrame:
     """Charge ratings.csv avec un schéma explicite.
        Version robuste pour macOS / WSL / Windows.
     """
-    # 1. On récupère la racine et on construit le chemin complet
-    # .resolve() transforme le chemin en chemin absolu réel
-    path_objet = (get_project_root() / relative_path).resolve()
+    # Accepte un chemin relatif au projet ou un chemin absolu.
+    path_candidate = Path(relative_path)
+    if path_candidate.is_absolute():
+        path_objet = path_candidate.resolve()
+    else:
+        path_objet = (get_project_root() / path_candidate).resolve()
 
     # 2. Vérification de sécurité (Python vérifie si le fichier est là)
     if not path_objet.exists():
@@ -99,38 +128,22 @@ def load_movies_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
         .csv(csv_path)
     )
 
-def load_dataframes(spark: SparkSession) -> Tuple[DataFrame, DataFrame]:
-    """Charge ratings.csv et movies.csv avec schémas explicites."""
-    ratings_schema = StructType(
+
+def load_links_dataframe(spark: SparkSession, csv_path: str) -> DataFrame:
+    """Charge links.csv avec un schema explicite."""
+    links_schema = StructType(
         [
-            StructField("userId", IntegerType(), True),
             StructField("movieId", IntegerType(), True),
-            StructField("rating", FloatType(), True),
-            StructField("timestamp", LongType(), True),
+            StructField("imdbId", IntegerType(), True),
+            StructField("tmdbId", IntegerType(), True),
         ]
     )
 
-    movies_schema = StructType(
-        [
-            StructField("movieId", IntegerType(), True),
-            StructField("title", StringType(), True),
-            StructField("genres", StringType(), True),
-        ]
-    )
-
-    df_ratings = (
+    return (
         spark.read.options(header=True, sep=",")
-        .schema(ratings_schema)
-        .csv("data/raw_small/ratings.csv")
+        .schema(links_schema)
+        .csv(csv_path)
     )
-
-    df_movies = (
-        spark.read.options(header=True, sep=",")
-        .schema(movies_schema)
-        .csv("data/raw_small/movies.csv")
-    )
-
-    return df_ratings, df_movies
 
 def clean_data(df_ratings: DataFrame, df_movies: DataFrame) -> Tuple[DataFrame, DataFrame]:
     """Nettoie les DataFrames: valeurs manquantes, doublons et qualité minimale."""
@@ -264,7 +277,9 @@ def main() -> None:
     """Exécute le pipeline complet d'import, nettoyage, analyse et visualisation."""
     spark = create_spark_session()
     try:
-        df_ratings, df_movies = load_dataframes(spark)
+        _, path_ratings, path_movies = resolve_data_source_paths("raw_small")
+        df_ratings = load_ratings_dataframe(spark, path_ratings.as_posix())
+        df_movies = load_movies_dataframe(spark, path_movies.as_posix())
         preview_data(df_ratings, df_movies)
 
         df_ratings_clean, df_movies_clean = clean_data(df_ratings, df_movies)

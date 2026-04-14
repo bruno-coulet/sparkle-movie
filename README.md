@@ -1,145 +1,125 @@
-# Algo de recommandations sparkle movie
+# Sparkle Movie - Systeme de recommandation MovieLens
 
-## Plateforme de streaming vidéo
+## Objectif
+Construire et comparer plusieurs approches de recommandation personnalisee a partir de MovieLens:
+- filtrage collaboratif avec ALS (Spark MLlib)
+- recommandation basee contenu
+- recommandation user-user (KNN)
 
-**Objectif** : Améliorer l'expérience utilisateur en proposant des recommandations personnalisées.  
-Utiliser l'ensemble de données MovieLens pour
-créer un modèle de recommandation et fournir une liste de films
-recommandés pour différents utilisateurs.
+Le projet est organise en deux temps:
+1. EDA et preparation des donnees dans [notebooks/eda.ipynb](notebooks/eda.ipynb)
+2. Modelisation et evaluation dans un notebook dedie
 
+## Stack
+- Python 3.12
+- Gestion d'environnement: uv
+- PySpark
+- Pandas / Matplotlib / Seaborn
 
-## Setup WSL, Spark fonctionne dificillement sur windows
-1. Système et Java
+## Demarrage
 
-``` shell
+### 1) Pre-requis systeme (WSL/Linux)
+Le dua Spark et Windows crée de s problemes de PATH et de parefeu
+```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install openjdk-17-jdk unzip -y
 java -version
 ```
-2. Installation de uv (Gestionnaire Python)
-C'est l'outil de gestion d'environnement.   
-Sous Linux, on l'installe généralement via leur script officiel :
 
-```shell
+### 2) Installation de uv
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.cargo/env  # Pour activer la commande 'uv' immédiatement
-``` 
-
-3. Git et Sécurité (Le pont vers GitHub)
-```shell
-# Configuration de l'identité
-git config --global user.email "..."
-git config --global user.name "..."
-
-# Génération de la clé
-ssh-keygen -t ed25519 -C "..."
-# (Ici, copier le contenu de ~/.ssh/id_ed25519.pub sur GitHub)
-
-# Bascule du dépôt existant vers SSH
-git remote set-url origin git@github.com:bruno-coulet/sparkle-movie.git
-
-git config --global user.email "..."
-git config --global user.name "..."
-``` 
-
-
-4. Structure du Projet et Données
-
-```shell
-mkdir -p data/raw/small data/processed src
-cd data/raw/small
-wget https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-# installer l'outil pour dezipper
-sudo apt update && sudo apt install unzip
-# Dézipper
-unzip ml-latest-small.zip
-# On déplace le contenu du dossier extrait vers le dossier courant (.)
-mv ml-latest-small/* .
-# suprime le fichier zip
-rm -rf ml-latest-small.zip
-# Revenir à la racine du projet
-cd ../../..
+source "$HOME/.cargo/env"
 ```
 
-5. Environnement Python avec uv
-
-```shell
-uv venv                       # Créer l'environnement
-source .venv/bin/activate     # Activer l'environnement
-uv add pyspark                # Installer les dépendances
+### 3) Environnement Python
+```bash
+uv venv
+source .venv/bin/activate
+uv add pyspark pandas matplotlib seaborn ipykernel
 ```
 
-installer le kernel pour pouvoir utiliser le notebook
-```shell
+### 4) Kernel notebook
+```bash
 uv run python -m ipykernel install --user --name sparkle-movie --display-name sparkle-movie
 ```
-Lancer Jupyter depuis WSL
-```shell
+
+### 5) Lancement
+```bash
 jupyter lab
 ```
 
+## Donnees
+Dataset MovieLens: https://grouplens.org/datasets/movielens/
 
+Tables principales:
+- ratings.csv: userId, movieId, rating, timestamp
+- movies.csv: movieId, title, genres
+- links.csv: movieId, imdbId, tmdbId
 
+## Workflow [EDA](notebooks/eda.ipynb)
+Le notebook [notebooks/eda.ipynb](notebooks/eda.ipynb) couvre:
+1. Selection de la source via DATA_SOURCE
+2. Chargement Spark + verifications de schema
+3. Nettoyage (NA, doublons, bornes de notes)
+4. Baseline orientee recommandation
+5. Split temporel anti-fuite (train/validation/test)
+6. Tendances globales (top films, genres)
+7. Sauvegarde des artefacts pour le notebook de modelisation
 
+## Baseline orientee recommandation
+Mesures calculees dans l'EDA:
+- nombre d'utilisateurs, de films et d'interactions
+- densite user-item
+- distributions du nombre de notes par utilisateur et par film
+- taux d'utilisateurs/items rares (ex: moins de 5 interactions)
 
+Ces indicateurs servent a qualifier:
+- la sparsity de la matrice user-item
+- la longue traine des items
+- la difficulte potentielle pour ALS/KNN
 
+## Split temporel anti-fuite
+Le split est base sur timestamp:
+- train: interactions les plus anciennes
+- validation: interactions intermediaires
+- test: interactions les plus recentes
 
-### Le dataset contient les informations suivantes :
-1. ratings.csv :   
-Les notes attribuées par les utilisateurs aux films.
-○ **userId, movieId, rating, timestamp**
+Pourquoi temporel:
+- en production, on predit le futur avec le passe
+- on evite la fuite d'information d'un split aleatoire (melange passe/futur)
 
-2. movies.csv :   
-Les métadonnées des films.
-○ **movieId, title, genres**
+Note reproductibilite:
+- le split temporel actuel est deterministe
+- une seed (ex: 42) reste utile pour les etapes aleatoires du notebook 2
 
-1. Préparation de l’environnement   
-● Installez PySpark sur votre machine. (une API Python pour Spark)   
-● Configurez une session Spark   
-● Récupérez le dataset [MovieLens](https://grouplens.org/datasets/movielens/),   
-différentes tailles sont disponibles selon les ressources.
+## Artefacts sauvegardes
+Le notebook EDA peut enregistrer automatiquement:
+- [data/processed/small/ratings_clean.parquet](data/processed/small/ratings_clean.parquet)
+- [data/processed/small/movies_clean.parquet](data/processed/small/movies_clean.parquet)
+- [data/processed/small/splits_temporal/train](data/processed/small/splits_temporal/train)
+- [data/processed/small/splits_temporal/validation](data/processed/small/splits_temporal/validation)
+- [data/processed/small/splits_temporal/test](data/processed/small/splits_temporal/test)
 
+Ces fichiers servent de base stable pour comparer toutes les approches de recommandation.
 
-### 2. Chargement et exploration des données
-● Importez les fichiers ratings.csv et movies.csv dans des DataFrames
-Spark.
-● Affichez les 10 premières lignes de chaque DataFrame pour en
-comprendre la structure.
-● Nettoyez les données si nécessaire (valeurs manquantes, doublons,
-etc.).
-● Analysez les tendances générales :
-○ Quels sont les films les mieux notés en moyenne ?
-○ Quels genres de films sont les plus populaires ?
-● Générez différentes visualisations à l’aide de librairies Python ainsi que
-l’outil Tableau Desktop.
+## Notebook 2 - Plan de modelisation
+1. ALS (Spark MLlib)
+- tuning de rank, regParam, maxIter
+- evaluation RMSE + metriques top-K
 
-### 3. Modélisation avec Spark MLlib : ALS
+2. Recommandation basee contenu
+- vecteurs de genres (et/ou TF-IDF)
+- similarite cosinus item-item
 
-**MLlib** est un wrapper pour PySpark et la bibliothèque de machine learning de Spark.
-Cette bibliothèque utilise la technique du parallélisme des données pour stocker et exploiter les données. L'API de machine learning fournie par la bibliothèque MLlib est assez simple à utiliser. MLlib prend en charge de nombreux algorithmes de machine learning pour la classification, la régression, le clustering, le filtrage collaboratif, la réduction de dimensionnalité et l'identification des primitives d'optimisation sous-jacentes.
+3. Recommandation user-user (KNN)
+- voisins proches sur espace user-item
+- aggregation des preferences des voisins
 
-● Utilisez l’algorithme ALS (Alternating Least Squares matrix factorization)
-de Spark MLlib pour entraîner un modèle de recommandation.
+4. Evaluation comparee
+- precision@K, recall@K, coverage
+- recommandations pour 3 a 5 utilisateurs fictifs
 
-● Ajustez les hyperparamètres comme le rank, la régularisation
-(regParam) et le nombre d’itérations.
-
-● Utilisez des métriques comme la Root Mean Square Error (RMSE) pour
-évaluer la performance du modèle.
-
-
-### 4. Recommandation basée sur le contenu
-● Créez des profils de films basés sur les genres.
-● Implémentez un système recommandant des films similaires à ceux
-aimés par un utilisateur (TF-IDF, similarité cosinus).
-5. Recommandation Basée sur les Proximités Utilisateurs (KNN)
-● Implémentez une approche KNN pour trouver des utilisateurs similaires.
-● Générez des recommandations en fonction des évaluations des voisins
-proches.
-
-
-### 6. Evaluation des approches de recommandation
-● Évaluez la précision et la couverture des recommandations.
-● Comparez les résultats des différentes approches.
-● Donnez des recommandations pour 3 à 5 utilisateurs fictifs.
-● Concluez sur la performance de vos différentes méthodes.
+## Remarques implementation
+- Utiliser get_project_root() dans [src/utils.py](src/utils.py) pour stabiliser les chemins entre macOS/WSL.
+- Preferer le chargement des artefacts processed dans le notebook de modelisation pour eviter de recalculer le nettoyage a chaque run.
