@@ -7,20 +7,65 @@ Construire et comparer plusieurs approches de recommandation personnalisee a par
 - recommandation user-user (KNN)
 
 Le projet est organise en deux temps:
-1. EDA et preparation des donnees dans [notebooks/eda.ipynb](notebooks/eda.ipynb)
-2. Modelisation et evaluation dans un notebook dedie
+1. EDA et preparation des donnees - [notebooks/eda.ipynb](notebooks/eda.ipynb)
+2. Modelisation et evaluation - [notebooks/model.ipynb](notebooks/model.ipynb)
 
 ## Stack
 - Python 3.12
 - Gestion d'environnement: uv
 - PySpark
 - Pandas / Matplotlib / Seaborn
+- FastAPI
+
+## Architecture du projet
+
+Vue d'ensemble de l'architecture actuelle:
+
+```text
+sparkle-movie/
+├── README.md
+├── pyproject.toml
+├── src/
+│   ├── __init__.py
+│   ├── py.typed
+│   └── utils.py
+├── notebooks/
+│   ├── eda.ipynb
+│   └── model.ipynb
+├── data/
+│   ├── raw_small/
+│   ├── raw_big/
+│   └── processed/
+│       ├── small/
+│       └── big/
+├── api/
+└── tests/
+```
+
+Responsabilites par dossier:
+- `src/`: logique Python reutilisable (ex: creation de session Spark, resolution des chemins, chargement/nettoyage des donnees, fonctions d'analyse).
+- `notebooks/`: experimentation et demonstration du pipeline de recommandation.
+	- `eda.ipynb`: exploration, controle qualite, split temporel, export des artefacts.
+	- `model.ipynb`: entrainement/evaluation des approches ALS, contenu, KNN.
+- `data/raw_*`: donnees sources MovieLens non transformees.
+- `data/processed/*`: artefacts derives et versionnes localement (parquet + splits train/validation/test).
+- `api/`: futur point d'exposition du moteur de recommandation via FastAPI.
+- `tests/`: tests unitaires/integration du code Python (encore a completer).
+
+Flux de donnees (contrat entre composants):
+1. Les donnees sont lues depuis `data/raw_small` ou `data/raw_big`.
+2. Le notebook EDA nettoie et profile les donnees, puis ecrit les artefacts dans `data/processed/{small|big}`.
+3. Le notebook de modelisation ne lit que `data/processed/*` pour garantir la reproductibilite.
+4. A terme, l'API consommera les artefacts/modeles produits pour servir des recommandations.
+
+Ce decoupage permet de separer clairement l'exploration, la preparation des donnees, la modelisation et la phase de mise en production.
 
 ## Demarrage
 
 ### 1) Pre-requis systeme (WSL/Linux)
-Le dua Spark et Windows crée de s problemes de PATH et de parefeu
-```bash
+Sur Windows, Spark crée des problemes de PATH et de parefeu à l'installation. 
+SPark focntionne sur Java, il faut donc installer Java 
+```shell
 sudo apt update && sudo apt upgrade -y
 sudo apt install openjdk-17-jdk unzip -y
 java -version
@@ -32,7 +77,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 source "$HOME/.cargo/env"
 ```
 
-### 3) Environnement Python
+### 3) Création de l'environnement avec uv
 ```bash
 uv venv
 source .venv/bin/activate
