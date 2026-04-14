@@ -1,15 +1,14 @@
 # Algo de recommandations sparkle movie
 
-## Vous travaillez pour une plateforme de streaming vidéo
+## Plateforme de streaming vidéo
 
 **Objectif** : Améliorer l'expérience utilisateur en proposant des recommandations personnalisées.  
-
-Vous devez utiliser l'ensemble de données MovieLens pour
+Utiliser l'ensemble de données MovieLens pour
 créer un modèle de recommandation et fournir une liste de films
 recommandés pour différents utilisateurs.
 
 
-## Setup WSL
+## Setup WSL, Spark fonctionne dificillement sur windows
 1. Système et Java
 
 ``` shell
@@ -66,7 +65,7 @@ cd ../../..
 
 ```shell
 uv venv                       # Créer l'environnement
-source .venv/bin/activate     # L'activer
+source .venv/bin/activate     # Activer l'environnement
 uv add pyspark                # Installer les dépendances
 ```
 
@@ -86,15 +85,17 @@ jupyter lab
 
 
 ### Le dataset contient les informations suivantes :
-1. ratings.csv : Les notes attribuées par les utilisateurs aux films.
+1. ratings.csv :   
+Les notes attribuées par les utilisateurs aux films.
 ○ **userId, movieId, rating, timestamp**
 
-2. movies.csv : Les métadonnées des films.
+2. movies.csv :   
+Les métadonnées des films.
 ○ **movieId, title, genres**
 
-1. Préparation de l’environnement
-● Installez PySpark sur votre machine. (une API Python pour Spark)
-● Configurez une session Spark.
+1. Préparation de l’environnement   
+● Installez PySpark sur votre machine. (une API Python pour Spark)   
+● Configurez une session Spark   
 ● Récupérez le dataset [MovieLens](https://grouplens.org/datasets/movielens/),   
 différentes tailles sont disponibles selon les ressources.
 
