@@ -59,13 +59,17 @@ Tables principales:
 
 ## Workflow [EDA](notebooks/eda.ipynb)
 Le notebook [notebooks/eda.ipynb](notebooks/eda.ipynb) couvre:
-1. Selection de la source via DATA_SOURCE
+1. Selection de la source via DATA_SOURCE (`raw_small` ou `raw_big`)
 2. Chargement Spark + verifications de schema
 3. Nettoyage (NA, doublons, bornes de notes)
 4. Baseline orientee recommandation
 5. Split temporel anti-fuite (train/validation/test)
 6. Tendances globales (top films, genres)
 7. Sauvegarde des artefacts pour le notebook de modelisation
+
+Contrat de donnees entre notebooks:
+- EDA lit `data/raw/*`, nettoie, analyse, puis exporte des artefacts dans `data/processed/*`.
+- Model lit uniquement les artefacts exportes dans `data/processed/*`.
 
 ## Baseline orientee recommandation
 Mesures calculees dans l'EDA:
@@ -104,6 +108,19 @@ Le notebook EDA peut enregistrer automatiquement:
 Ces fichiers servent de base stable pour comparer toutes les approches de recommandation.
 
 ## Notebook 2 - Plan de modelisation
+Notebook cible: [notebooks/model.ipynb](notebooks/model.ipynb)
+
+Source des donnees pour la modelisation:
+- Ce notebook lit ses entrees dans `data/processed` (jamais directement dans `data/raw`).
+- Artefacts attendus:
+	- [data/processed/small/ratings_clean.parquet](data/processed/small/ratings_clean.parquet)
+	- [data/processed/small/movies_clean.parquet](data/processed/small/movies_clean.parquet)
+	- [data/processed/small/splits_temporal/train](data/processed/small/splits_temporal/train)
+	- [data/processed/small/splits_temporal/validation](data/processed/small/splits_temporal/validation)
+	- [data/processed/small/splits_temporal/test](data/processed/small/splits_temporal/test)
+
+
+
 1. ALS (Spark MLlib)
 - tuning de rank, regParam, maxIter
 - evaluation RMSE + metriques top-K
