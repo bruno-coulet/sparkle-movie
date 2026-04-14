@@ -3,11 +3,11 @@ __pycache__/
 *.pyc
 .DS_Store
 CLAUDE.md
-.github/
+.github/copilot_instructions.md
 
 data/
 src/test*
-test*
+
 
 # Data Science & Jupyter
 .ipynb_checkpoints/
