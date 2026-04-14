@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Any
 
 
 app = FastAPI()
@@ -29,7 +30,7 @@ Le wrapper est géré en interne par FastAPI au moment où la requête arrive
 '''
 
 @app.get("/recommandations/{user_id}")
-def get_recommendations(user_id: int):
+def get_recommendations(user_id: int) -> dict[str, Any]:
     # Placeholder pour les recommandations basées sur le modèle
     recommendations = [
         {"movie_id": 1, "title": "Movie A", "score": 4.5},
