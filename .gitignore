@@ -7,6 +7,7 @@ CLAUDE.md
 
 data/
 src/test*
+test.py
 
 
 # Data Science & Jupyter
