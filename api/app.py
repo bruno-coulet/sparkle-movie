@@ -1,6 +1,13 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+"""API FastAPI de démonstration pour servir des recommandations.
+
+Cette version expose un endpoint simple qui retourne un nombre configurable
+de recommandations fictives. Elle sert de base avant l'intégration du vrai
+moteur de recommandation.
+"""
+
 from typing import Any
+
+from fastapi import FastAPI, Query
 
 
 app = FastAPI()
@@ -30,11 +37,21 @@ Le wrapper est géré en interne par FastAPI au moment où la requête arrive
 '''
 
 @app.get("/recommandations/{user_id}")
-def get_recommendations(user_id: int) -> dict[str, Any]:
-    # Placeholder pour les recommandations basées sur le modèle
+def get_recommendations(
+    user_id: int,
+    limit: int = Query(10, ge=1, le=100),
+) -> dict[str, Any]:
+    """Retourne des recommandations fictives pour un utilisateur donné.
+
+    Le paramètre ``limit`` permet de contrôler le nombre de résultats renvoyés.
+    Par défaut, l'API retourne 10 recommandations.
+    """
     recommendations = [
-        {"movie_id": 1, "title": "Movie A", "score": 4.5},
-        {"movie_id": 2, "title": "Movie B", "score": 4.0},
-        {"movie_id": 3, "title": "Movie C", "score": 3.5},
+        {
+            "movie_id": movie_id,
+            "title": f"Movie {movie_id}",
+            "score": round(5.0 - (movie_id - 1) * 0.2, 2),
+        }
+        for movie_id in range(1, limit + 1)
     ]
     return {"user_id": user_id, "recommendations": recommendations}
