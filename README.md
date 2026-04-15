@@ -1,25 +1,29 @@
 # Sparkle Movie - Systeme de recommandation MovieLens
 
+## Projet
+- Objectif: construire un systeme de recommandation de films (ALS, contenu, KNN) avec Spark.
+- Entrees actuelles: donnees nettoyees en Parquet dans data/processed.
+- API actuelle: FastAPI expose des endpoints de statistiques et de recommandations baseline.
+- Cible: brancher l'API sur le modele ALS entraine ou sur un dataset Top-10 genere offline.
+
 ## Objectif
-Construire et comparer plusieurs approches de recommandation personnalisee a partir de MovieLens:
-- filtrage collaboratif avec ALS (Spark MLlib)
+Comparer plusieurs approches de recommandation personnalisee a partir de MovieLens:
+- filtrage collaboratif ALS (Spark MLlib)
 - recommandation basee contenu
 - recommandation user-user (KNN)
 
-Le projet est organise en deux temps:
-1. EDA et preparation des donnees - [notebooks/eda.ipynb](notebooks/eda.ipynb)
-2. Modelisation et evaluation - [notebooks/model.ipynb](notebooks/model.ipynb)
+Le projet est organise en deux notebooks:
+1. EDA et preparation des donnees: [notebooks/eda.ipynb](notebooks/eda.ipynb)
+2. Modelisation et evaluation: [notebooks/model.ipynb](notebooks/model.ipynb)
 
 ## Stack
 - Python 3.12
 - Gestion d'environnement: uv
-- PySpark
+- PySpark 3.5.x
 - Pandas / Matplotlib / Seaborn
 - FastAPI
 
-## Architecture du projet
-
-Vue d'ensemble de l'architecture actuelle:
+## Architecture
 
 ```text
 sparkle-movie/
@@ -36,62 +40,54 @@ sparkle-movie/
 │   ├── raw_small/
 │   ├── raw_big/
 │   └── processed/
-│       ├── small/
-│       └── big/
+│       ├── ratings_clean.parquet/
+│       └── movies_clean.parquet/
 ├── api/
+│   └── app.py
 └── tests/
 ```
 
-Responsabilites par dossier:
-- `src/`: logique Python reutilisable (ex: creation de session Spark, resolution des chemins, chargement/nettoyage des donnees, fonctions d'analyse).
-- `notebooks/`: experimentation et demonstration du pipeline de recommandation.
-	- `eda.ipynb`: exploration, controle qualite, split temporel, export des artefacts.
-	- `model.ipynb`: entrainement/evaluation des approches ALS, contenu, KNN.
-- `data/raw_*`: donnees sources MovieLens non transformees.
-- `data/processed/*`: artefacts derives et versionnes localement (parquet + splits train/validation/test).
-- `api/`: futur point d'exposition du moteur de recommandation via FastAPI.
-- `tests/`: tests unitaires/integration du code Python (encore a completer).
+Responsabilites:
+- src: fonctions reutilisables Spark et utilitaires de chargement/nettoyage.
+- notebooks: experimentation, entrainement et evaluation.
+- data/raw_*: donnees brutes MovieLens.
+- data/processed: donnees nettoyees consommees par modelisation et API.
+- api: exposition HTTP des resultats via FastAPI.
 
-Flux de donnees (contrat entre composants):
-1. Les donnees sont lues depuis `data/raw_small` ou `data/raw_big`.
-2. Le notebook EDA nettoie et profile les donnees, puis ecrit les artefacts dans `data/processed/{small|big}`.
-3. Le notebook de modelisation ne lit que `data/processed/*` pour garantir la reproductibilite.
-4. A terme, l'API consommera les artefacts/modeles produits pour servir des recommandations.
+## Demarrage Rapide
 
-Ce decoupage permet de separer clairement l'exploration, la preparation des donnees, la modelisation et la phase de mise en production.
+### 1) Prerequis systeme (WSL/Linux/macOS)
+Spark necessite Java:
 
-## Demarrage
-
-### 1) Pre-requis systeme (WSL/Linux)
-Sur Windows, Spark crée des problemes de PATH et de parefeu à l'installation. 
-SPark focntionne sur Java, il faut donc installer Java 
-```shell
+```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install openjdk-17-jdk unzip -y
 java -version
 ```
 
 ### 2) Installation de uv
+
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source "$HOME/.cargo/env"
 ```
 
-### 3) Création de l'environnement avec uv
+### 3) Installation des dependances projet
+
 ```bash
-uv venv
+uv sync
+```
+
+### 4) Activation de l'environnement
+
+```bash
 source .venv/bin/activate
-uv add pyspark pandas matplotlib seaborn ipykernel
 ```
 
-### 4) Kernel notebook
-```bash
-uv run python -m ipykernel install --user --name sparkle-movie --display-name sparkle-movie
-```
+### 5) Lancer Jupyter
 
-### 5) Lancement
 ```bash
-jupyter lab
+uv run jupyter lab
 ```
 
 ## Donnees
@@ -102,86 +98,71 @@ Tables principales:
 - movies.csv: movieId, title, genres
 - links.csv: movieId, imdbId, tmdbId
 
-## Workflow [EDA](notebooks/eda.ipynb)
-Le notebook [notebooks/eda.ipynb](notebooks/eda.ipynb) couvre:
-1. Selection de la source via DATA_SOURCE (`raw_small` ou `raw_big`)
-2. Chargement Spark + verifications de schema
-3. Nettoyage (NA, doublons, bornes de notes)
-4. Baseline orientee recommandation
-5. Split temporel anti-fuite (train/validation/test)
-6. Tendances globales (top films, genres)
-7. Sauvegarde des artefacts pour le notebook de modelisation
+## Pipeline Data Science
 
-Contrat de donnees entre notebooks:
-- EDA lit `data/raw/*`, nettoie, analyse, puis exporte des artefacts dans `data/processed/*`.
-- Model lit uniquement les artefacts exportes dans `data/processed/*`.
+### Notebook EDA
+[notebooks/eda.ipynb](notebooks/eda.ipynb) couvre:
+1. chargement Spark
+2. controle schema/qualite
+3. nettoyage (NA, doublons, bornes)
+4. analyses exploratoires
+5. export des donnees nettoyees
 
-## Baseline orientee recommandation
-Mesures calculees dans l'EDA:
-- nombre d'utilisateurs, de films et d'interactions
-- densite user-item
-- distributions du nombre de notes par utilisateur et par film
-- taux d'utilisateurs/items rares (ex: moins de 5 interactions)
+Artefacts produits (utilises ensuite):
+- [data/processed/ratings_clean.parquet](data/processed/ratings_clean.parquet)
+- [data/processed/movies_clean.parquet](data/processed/movies_clean.parquet)
 
-Ces indicateurs servent a qualifier:
-- la sparsity de la matrice user-item
-- la longue traine des items
-- la difficulte potentielle pour ALS/KNN
+### Notebook Model
+[notebooks/model.ipynb](notebooks/model.ipynb) couvre:
+1. tuning ALS (rank, regParam, maxIter)
+2. entrainement final
+3. evaluation RMSE et metriques top-K
+4. export du modele ALS entraine (cellule de fin)
 
-## Split temporel anti-fuite
-Le split est base sur timestamp:
-- train: interactions les plus anciennes
-- validation: interactions intermediaires
-- test: interactions les plus recentes
+Export modele ALS:
+- Le modele final est sauvegarde dans: artifacts/als_model
+- Cette sauvegarde sert de base de reutilisation pour l'API ou un job batch.
 
-Pourquoi temporel:
-- en production, on predit le futur avec le passe
-- on evite la fuite d'information d'un split aleatoire (melange passe/futur)
+## API FastAPI
 
-Note reproductibilite:
-- le split temporel actuel est deterministe
-- une seed (ex: 42) reste utile pour les etapes aleatoires du notebook 2
+Le module [api/app.py](api/app.py) lit actuellement les donnees nettoyees depuis data/processed et expose:
+- /nombre_utilisateurs
+- /nombre_films_notes
+- /statistiques
+- /recommandations/{user_id}
+- /genres
+- /docs
 
-## Artefacts sauvegardes
-Le notebook EDA peut enregistrer automatiquement:
-- [data/processed/small/ratings_clean.parquet](data/processed/small/ratings_clean.parquet)
-- [data/processed/small/movies_clean.parquet](data/processed/small/movies_clean.parquet)
-- [data/processed/small/splits_temporal/train](data/processed/small/splits_temporal/train)
-- [data/processed/small/splits_temporal/validation](data/processed/small/splits_temporal/validation)
-- [data/processed/small/splits_temporal/test](data/processed/small/splits_temporal/test)
+Lancer l'API:
 
-Ces fichiers servent de base stable pour comparer toutes les approches de recommandation.
+```bash
+uv run uvicorn api.app:app --host 127.0.0.1 --port 8000
+```
 
-## Notebook 2 - Plan de modelisation
-Notebook cible: [notebooks/model.ipynb](notebooks/model.ipynb)
+## Strategie ALS Pour Gros Volume
 
-Source des donnees pour la modelisation:
-- Ce notebook lit ses entrees dans `data/processed` (jamais directement dans `data/raw`).
-- Artefacts attendus:
-	- [data/processed/small/ratings_clean.parquet](data/processed/small/ratings_clean.parquet)
-	- [data/processed/small/movies_clean.parquet](data/processed/small/movies_clean.parquet)
-	- [data/processed/small/splits_temporal/train](data/processed/small/splits_temporal/train)
-	- [data/processed/small/splits_temporal/validation](data/processed/small/splits_temporal/validation)
-	- [data/processed/small/splits_temporal/test](data/processed/small/splits_temporal/test)
+Pour un dataset tres grand, le pattern recommande est:
+1. entrainement ALS offline (Spark batch)
+2. generation offline d'un Top-10 par utilisateur
+3. lecture rapide de ce Top-10 par l'API
 
+Pourquoi:
+- eviter de recalculer ALS en temps reel dans une requete HTTP
+- stabiliser la latence API
+- mieux scaler horizontalement
 
+Schema cible du dataset de recommandations:
+- userId
+- movieId
+- score
+- rank
+- run_date
 
-1. ALS (Spark MLlib)
-- tuning de rank, regParam, maxIter
-- evaluation RMSE + metriques top-K
+## Feuille de Route
+1. ajouter un job batch qui genere recommandations_top10.parquet a partir du modele ALS.
+2. ajouter un endpoint API qui lit ces recommandations par userId.
+3. implementer un fallback cold-start (top populaires) si user inconnu.
 
-2. Recommandation basee contenu
-- vecteurs de genres (et/ou TF-IDF)
-- similarite cosinus item-item
-
-3. Recommandation user-user (KNN)
-- voisins proches sur espace user-item
-- aggregation des preferences des voisins
-
-4. Evaluation comparee
-- precision@K, recall@K, coverage
-- recommandations pour 3 a 5 utilisateurs fictifs
-
-## Remarques implementation
-- Utiliser get_project_root() dans [src/utils.py](src/utils.py) pour stabiliser les chemins entre macOS/WSL.
-- Preferer le chargement des artefacts processed dans le notebook de modelisation pour eviter de recalculer le nettoyage a chaque run.
+## Notes Implementation
+- Utiliser get_project_root() dans [src/utils.py](src/utils.py) pour des chemins robustes.
+- Garder le nettoyage dans EDA et la modelisation sur data/processed pour la reproductibilite.
