@@ -186,3 +186,4 @@ Schema cible du dataset de recommandations:
 ## Notes Implementation
 - Utiliser get_project_root() dans [src/utils.py](src/utils.py) pour des chemins robustes.
 - Garder le nettoyage dans EDA et la modelisation sur data/processed pour la reproductibilite.
+- Regrouper les imports au debut de [notebooks/eda.ipynb](notebooks/eda.ipynb) pour garder les cellules de calcul plus lisibles et eviter les imports redondants dans les sections baseline et visualisation.
