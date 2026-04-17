@@ -8,6 +8,8 @@ Module d'ingestion Spark pour MovieLens (version small).
 - main charge ratings et movies avec schemas explicites, puis montre une jointure de verification.
 """
 
+import os
+import sys
 from typing import Literal, Tuple
 from pathlib import Path
 
@@ -17,34 +19,15 @@ from pyspark.sql.types import FloatType, IntegerType, LongType, StringType, Stru
 
 DataSource = Literal["raw_small", "raw_big", "processed_small", "processed_big"]
 
-def get_project_root() -> Path:
-    """Retourne la racine du projet, peu importe d'où le code est lancé
-    __file__        : chemin absolu du fichier courant
-    Path(__file__)  : convertit en objet Path
-    .resolve()      : résout le chemin vers sa forme absolue réelle (utile si symlinks ou chemins relatifs)
-    .parent         : remonte d'un niveau → src
-    .parent.parent  : remonte encore d'un niveau → sparkle-movie (la racine!)
-    """
-    return Path(__file__).resolve().parent.parent
 
-def create_spark_session() -> SparkSession:
-    """Cree et retourne une session Spark locale."""
-    return (
-        SparkSession.builder.appName("MovieLens")
-        # Détermine combien de coeurs CPU utiliser pour l'exécution locale.
-        .master("local[*]")
-        # permet de réutiliser une session existante si elle est déjà créée, ou d’en créer une nouvelle sinon.
-        .getOrCreate()
-    )
+def is_running_in_colab() -> bool:
+    """Retourne True si le code s'exécute dans Google Colab."""
+    return "google.colab" in sys.modules or "COLAB_GPU" in os.environ
 
-def resolve_data_source_paths(
-    source: DataSource,
-    project_root: Path | None = None,
-) -> tuple[str, Path, Path]:
-    """Résout le format et les chemins ratings/movies selon la source demandée."""
-    root = project_root or get_project_root()
+
+def _build_source_paths(root: Path, source: DataSource) -> tuple[str, Path, Path]:
+    """Construit les chemins ratings/movies pour une racine projet et une source."""
     data_root = root / "data"
-
     sources: dict[DataSource, tuple[str, Path, Path]] = {
         "raw_small": (
             "csv",
@@ -67,14 +50,79 @@ def resolve_data_source_paths(
             data_root / "processed" / "big" / "movies_clean.parquet",
         ),
     }
+    return sources[source]
 
-    dataset_format, path_ratings, path_movies = sources[source]
-    if not path_ratings.exists() or not path_movies.exists():
-        raise FileNotFoundError(
-            f"Fichiers introuvables pour source={source}: {path_ratings} | {path_movies}"
-        )
 
-    return dataset_format, path_ratings, path_movies
+def _iter_candidate_roots(project_root: Path | None = None) -> list[Path]:
+    """Retourne une liste de racines candidates ordonnées par priorité."""
+    candidates: list[Path] = []
+
+    if project_root is not None:
+        candidates.append(Path(project_root).resolve())
+
+    env_root = os.environ.get("SPARKLE_MOVIE_ROOT")
+    if env_root:
+        candidates.append(Path(env_root).resolve())
+
+    cwd = Path.cwd().resolve()
+    candidates.extend([cwd, *cwd.parents])
+
+    file_root = Path(__file__).resolve().parent.parent
+    candidates.extend([file_root, *file_root.parents])
+
+    # Déduplication en conservant l'ordre.
+    uniq: list[Path] = []
+    seen: set[Path] = set()
+    for cand in candidates:
+        if cand not in seen:
+            seen.add(cand)
+            uniq.append(cand)
+    return uniq
+
+def get_project_root() -> Path:
+    """Retourne la racine projet de façon robuste (local et Colab)."""
+    for cand in _iter_candidate_roots():
+        # Marqueurs forts du repo.
+        if (cand / "pyproject.toml").exists() and (cand / "src" / "utils.py").exists():
+            return cand
+        # Fallback Colab: dossier contenant src + data.
+        if is_running_in_colab() and (cand / "src").exists() and (cand / "data").exists():
+            return cand
+
+    # Dernier recours: comportement historique.
+    return Path(__file__).resolve().parent.parent
+
+def create_spark_session() -> SparkSession:
+    """Cree et retourne une session Spark locale."""
+    return (
+        SparkSession.builder.appName("MovieLens")
+        # Détermine combien de coeurs CPU utiliser pour l'exécution locale.
+        .master("local[*]")
+        # permet de réutiliser une session existante si elle est déjà créée, ou d’en créer une nouvelle sinon.
+        .getOrCreate()
+    )
+
+def resolve_data_source_paths(
+    source: DataSource,
+    project_root: Path | None = None,
+) -> tuple[str, Path, Path]:
+    """Résout le format et les chemins ratings/movies selon la source demandée.
+
+    En Colab, tente plusieurs racines (cwd, parents, racine du module) pour absorber
+    les cas de dossier imbriqué (ex: sparkle-movie/sparkle-movie).
+    """
+    checked_paths: list[tuple[Path, Path]] = []
+
+    for root in _iter_candidate_roots(project_root):
+        dataset_format, path_ratings, path_movies = _build_source_paths(root, source)
+        checked_paths.append((path_ratings, path_movies))
+        if path_ratings.exists() and path_movies.exists():
+            return dataset_format, path_ratings, path_movies
+
+    checked_str = " | ".join(f"{r} || {m}" for r, m in checked_paths[:6])
+    raise FileNotFoundError(
+        f"Fichiers introuvables pour source={source}. Chemins testes: {checked_str}"
+    )
 
 def load_ratings_dataframe(spark: SparkSession, relative_path: str) -> DataFrame:
     """Charge ratings.csv avec un schéma explicite.
