@@ -94,13 +94,33 @@ def get_project_root() -> Path:
 
 def create_spark_session() -> SparkSession:
     """Cree et retourne une session Spark locale."""
-    return (
-        SparkSession.builder.appName("MovieLens")
+    builder = SparkSession.builder.appName("MovieLens")
+
+    master_override = os.environ.get("SPARKLE_SPARK_MASTER")
+    memory_override = os.environ.get("SPARKLE_SPARK_DRIVER_MEMORY")
+    shuffle_override = os.environ.get("SPARKLE_SPARK_SHUFFLE_PARTITIONS")
+
+    if master_override:
+        builder = builder.master(master_override)
+
+    if is_running_in_colab():
+        # Profil Colab par defaut: stable sur la majorité des runtimes.
+        # Peut être augmenté via variables d'environnement si la machine le permet.
+        if not master_override:
+            builder = builder.master("local[2]")
+        builder = builder.config("spark.driver.memory", memory_override or "4g")
+        builder = builder.config("spark.sql.shuffle.partitions", shuffle_override or "8")
+    else:
         # Détermine combien de coeurs CPU utiliser pour l'exécution locale.
-        .master("local[*]")
-        # permet de réutiliser une session existante si elle est déjà créée, ou d’en créer une nouvelle sinon.
-        .getOrCreate()
-    )
+        if not master_override:
+            builder = builder.master("local[*]")
+        if memory_override:
+            builder = builder.config("spark.driver.memory", memory_override)
+        if shuffle_override:
+            builder = builder.config("spark.sql.shuffle.partitions", shuffle_override)
+
+    # permet de réutiliser une session existante si elle est déjà créée, ou d’en créer une nouvelle sinon.
+    return builder.getOrCreate()
 
 def resolve_data_source_paths(
     source: DataSource,
