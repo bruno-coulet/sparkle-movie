@@ -1,54 +1,48 @@
-"""
-API FastAPI pour servir les recommandations de films avec Spark.
+# =============================================================================
+# Projet      : Sparkle Movie
+# Fichier     : api/main.py
+# Description : Point d'entree FastAPI — lifespan, middleware, routes
+# Auteur      : Sulivan Moreau
+# Date        : 2026-04-19
+# Version     : 1.0.0
+# =============================================================================
 
-Point d'entrée: uvicorn api.main:app --reload
-"""
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
-from api.config import CORS_ORIGINS, CORS_CREDENTIALS, CORS_METHODS, CORS_HEADERS
+from api.config import CORS_CREDENTIALS, CORS_HEADERS, CORS_METHODS, CORS_ORIGINS, MODELS_DIR
 from api.routes.recommendations import router as recommendations_router
 from api.startup import SparkResourceManager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Gère le cycle de vie de l'application."""
-    # Startup
-    print("🔥 Initialisation de l'API au démarrage...")
+    """Gere le cycle de vie de l'application."""
     try:
         SparkResourceManager.get_data()
-        print("✅ Données Spark pré-chargées")
-    except Exception as e:
-        print(f"⚠️  Erreur lors du pré-chargement Spark: {e}")
-    
+    except Exception:
+        pass
+
     try:
         SparkResourceManager.get_recommendations_df()
-        print("✅ Recommandations ALS pré-chargées")
-    except Exception as e:
-        print(f"⚠️  Erreur lors du pré-chargement ALS: {e}")
-    
-    print("🎯 API prête !")
-    
+    except Exception:
+        pass
+
     yield
-    
-    # Shutdown
-    print("🛑 Arrêt de l'API...")
+
     SparkResourceManager.stop()
-    print("✅ Ressources libérées")
 
 
-# Création de l'application FastAPI
 app = FastAPI(
     title="Sparkle Movie API",
-    description="API de recommandations de films basée sur le modèle ALS de Spark",
+    description="API de recommandations de films basee sur le modele ALS de Spark",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# Configuration CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -57,12 +51,11 @@ app.add_middleware(
     allow_headers=CORS_HEADERS,
 )
 
-# Inclure les routes
 app.include_router(recommendations_router)
 
 
 @app.get("/", tags=["Info"])
-def home() -> dict[str, str]:
+def home() -> dict:
     """Page d'accueil avec les endpoints disponibles."""
     return {
         "message": "Bienvenue sur l'API Sparkle Movie !",
@@ -73,11 +66,27 @@ def home() -> dict[str, str]:
             "/api/utilisateur/{user_id}/avis": "Historique des avis d'un utilisateur",
             "/api/genres": "Genres populaires",
             "/api/statistiques": "Statistiques globales",
-        }
+        },
     }
 
 
 @app.get("/health", tags=["Info"])
-def health_check() -> dict[str, str]:
-    """Vérification de l'état de l'API."""
+def health_check() -> dict:
+    """Verification de l'etat de l'API."""
     return {"status": "ok", "service": "Sparkle Movie API"}
+
+
+@app.get("/metrics", tags=["Info"])
+def metrics() -> dict:
+    """Expose l'etat du cache Spark et des modeles charges."""
+    recs_loaded = "recommendations" in SparkResourceManager._data_cache
+    spark_active = SparkResourceManager._spark_session is not None
+
+    rmse_file = Path(MODELS_DIR) / "rmse.txt"
+    rmse = float(rmse_file.read_text().strip()) if rmse_file.exists() else None
+
+    return {
+        "spark_session_active": spark_active,
+        "recommendations_cached": recs_loaded,
+        "model_rmse": rmse,
+    }

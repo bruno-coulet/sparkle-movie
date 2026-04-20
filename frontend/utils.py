@@ -2,10 +2,10 @@
 Utilitaires pour le frontend Streamlit.
 """
 
-import streamlit as st
-import requests
-import pandas as pd
 from typing import Optional
+
+import requests
+import streamlit as st
 
 from frontend.config import API_URL, REQUEST_TIMEOUT
 
@@ -14,10 +14,7 @@ from frontend.config import API_URL, REQUEST_TIMEOUT
 def fetch_statistics() -> Optional[dict]:
     """Récupère les statistiques globales."""
     try:
-        response = requests.get(
-            f"{API_URL}/api/statistiques",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{API_URL}/api/statistiques", timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -29,10 +26,7 @@ def fetch_statistics() -> Optional[dict]:
 def fetch_genres() -> Optional[dict]:
     """Récupère les genres populaires."""
     try:
-        response = requests.get(
-            f"{API_URL}/api/genres",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{API_URL}/api/genres", timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -46,7 +40,7 @@ def fetch_recommendations(user_id: int, limit: int = 10) -> Optional[dict]:
         response = requests.get(
             f"{API_URL}/api/recommandations/{user_id}",
             params={"limit": limit},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return response.json()
@@ -61,7 +55,7 @@ def fetch_user_ratings(user_id: int, limit: int = 50) -> Optional[dict]:
         response = requests.get(
             f"{API_URL}/api/utilisateur/{user_id}/avis",
             params={"limit": limit},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return response.json()

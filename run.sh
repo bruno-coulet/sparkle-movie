@@ -30,13 +30,6 @@ if ! kill -0 $API_PID 2>/dev/null; then
     exit 1
 fi
 echo "✅ API lancée sur http://localhost:8000"
-
-# Vérifier que l'API a démarré
-if ! kill -0 $API_PID 2>/dev/null; then
-    echo "❌ L'API n'a pas pu démarrer. Vérifiez les erreurs ci-dessus."
-    exit 1
-fi
-echo "✅ API lancée sur http://localhost:8000"
 echo "📖 Documentation : http://localhost:8000/docs"
 
 # Lancer Streamlit en arrière-plan

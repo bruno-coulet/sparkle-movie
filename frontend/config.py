@@ -4,8 +4,6 @@ Application Streamlit pour la visualisation des recommandations.
 Configuration de la page unique style Netflix.
 """
 
-import streamlit as st
-
 # Configuration commune
 PAGE_CONFIG = {
     "page_title": "Sparkle Movie",
