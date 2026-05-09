@@ -108,6 +108,10 @@ data/processed/
 └── movies_clean.parquet/
 ```
 
+Pour le déploiement de production, l'API lit directement `data/processed/`.
+Le sous-dossier `small/` peut rester utile pour les notebooks, mais il n'est
+pas nécessaire au démarrage de l'API si les deux Parquet racine sont présents.
+
 **Sans ces fichiers, l'API ne peut pas démarrer.**
 
 ### 5) Lancer le système complet
@@ -271,6 +275,7 @@ def fetch_recommendations(user_id: int, limit: int = 10) -> Optional[dict]:
 - `data/processed/movies_clean.parquet/` (~100 MB)
 - `models/als_model/` (modèle Spark sauvegardé)
 - `models/recommendations.csv` (top-10 par utilisateur)
+- `data/processed/small/` (optionnel, utile seulement pour les notebooks de test)
 
 **Localisation actuelle:** Google Drive (lien à demander à l'équipe)
 

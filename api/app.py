@@ -32,7 +32,7 @@ _als_model: ALSModel | None = None
 
 PROJECT_ROOT = get_project_root()
 MODELS_DIR = PROJECT_ROOT / "models" / "als_model"
-PROCESSED_ROOT = PROJECT_ROOT / "data" / "processed" / "small"
+PROCESSED_ROOT = PROJECT_ROOT / "data" / "processed"
 
 
 def get_spark_session() -> SparkSession:
