@@ -16,7 +16,10 @@ Système de recommandation de films basé sur MovieLens avec:
 - **Data**: Apache Parquet format
 - **Orchestration**: Docker + Docker Compose (optionnel)
 
-- **Le traitement du grand jeu de donnée de 335 MB est fait sur colab en clonant le repo github sur googledrive**
+## Jeu de donné MovieLens
+
+Le traitement du grand jeu de donnée de 335 MB est fait sur **colab** en clonant le repo github sur **googledrive**
+La version nettoyé des données et les models entrainés sont à télécharger depuis https://drive.google.com/drive/folders/1A80Gl-IPq1H--me0zlXq5Hrtz0nlvvWH?usp=sharing
 
 ## Architecture
 
