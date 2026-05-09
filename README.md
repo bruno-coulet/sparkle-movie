@@ -29,21 +29,41 @@ Le projet est organise en deux notebooks:
 sparkle-movie/
 ├── README.md
 ├── pyproject.toml
-├── src/
-│   ├── __init__.py
-│   ├── py.typed
-│   └── utils.py
-├── notebooks/
-│   ├── eda.ipynb
-│   └── model.ipynb
+├── Makefile
+├── requirements.txt
 ├── data/
-│   ├── raw_small/
-│   ├── raw_big/
+│   ├── raw/
+│   │   ├── movies.csv
+│   │   ├── ratings.csv
+│   │   ├── tags.csv
+│   │   └── links.csv
 │   └── processed/
 │       ├── ratings_clean.parquet/
 │       └── movies_clean.parquet/
+├── models/
+│   ├── recommendations.csv
+│   └── recommendations.parquet/
+├── src/
+│   ├── __init__.py
+│   ├── preprocess.py  # CSV → Parquet
+│   └── train.py       # ALS training
 ├── api/
-│   └── app.py
+│   ├── main.py        # FastAPI app
+│   ├── config.py      # Configuration
+│   ├── startup.py     # Spark resources
+│   ├── schemas.py     # Pydantic models
+│   ├── routes/
+│   │   └── recommendations.py
+│   └── services/
+│       └── recommendation_service.py
+├── streamlit/
+│   ├── __init__.py
+│   ├── app.py         # Streamlit frontend
+│   ├── config.py      # Frontend config
+│   └── utils.py       # Utility functions
+├── notebooks/
+│   ├── eda.ipynb
+│   └── model.ipynb
 └── tests/
 ```
 

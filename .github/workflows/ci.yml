@@ -1,0 +1,75 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [app]
+  pull_request:
+    branches: [app]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1 : Lint — ruff check + ruff format
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install "ruff>=0.6"
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+  # ---------------------------------------------------------------------------
+  # Job 2 : Tests — pytest avec Spark mocke
+  # ---------------------------------------------------------------------------
+  tests:
+    name: Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov httpx
+
+      - name: Run tests
+        run: pytest tests/ -v --cov=api --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  # ---------------------------------------------------------------------------
+  # Job 3 : Docker Build — uniquement sur la branche main
+  # ---------------------------------------------------------------------------
+  docker-build:
+    name: Docker Build
+    needs: tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image API
+        run: docker build -t sparkle-movie-api:latest .
+
+      - name: Build image frontend
+        run: docker build -t sparkle-movie-frontend:latest -f Dockerfile.frontend .

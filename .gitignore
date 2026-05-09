@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 .DS_Store
 CLAUDE.md
+.claude/
+.vscode/
 .github/copilot_instructions.md
 
 data/
