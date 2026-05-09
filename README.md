@@ -1,87 +1,79 @@
 # Sparkle Movie - Systeme de recommandation MovieLens
 
 ## Projet
-- Objectif: construire un systeme de recommandation de films (ALS, contenu, KNN) avec Spark.
-- Entrees actuelles: donnees nettoyees en Parquet dans data/processed.
-- API actuelle: FastAPI expose des endpoints de statistiques et de recommandations baseline.
-- Cible: brancher l'API sur le modele ALS entraine ou sur un dataset Top-10 genere offline.
-
-## Objectif
-Comparer plusieurs approches de recommandation personnalisee a partir de MovieLens:
-- filtrage collaboratif ALS (Spark MLlib)
-- recommandation basee contenu
-- recommandation user-user (KNN)
-
-Le projet est organise en deux notebooks:
-1. EDA et preparation des donnees: [notebooks/eda.ipynb](notebooks/eda.ipynb)
-2. Modelisation et evaluation: [notebooks/model.ipynb](notebooks/model.ipynb)
+Système de recommandation de films basé sur MovieLens avec:
+- **Backend**: API FastAPI exposant les recommandations ALS Spark
+- **Frontend**: Interface Streamlit style Netflix pour l'exploration interactive
+- **ML**: Filtrage collaboratif ALS avec Spark MLlib sur grand dataset (330k users, 33M ratings)
+- **Data**: Données nettoyées en Parquet (movies_clean.parquet, ratings_clean.parquet)
 
 ## Stack
-- Python 3.12
-- Gestion d'environnement: uv
-- PySpark 3.5.x
-- Pandas / Matplotlib / Seaborn
-- FastAPI
+- **Python**: 3.12
+- **Environnement**: uv
+- **ML/Big Data**: PySpark 3.5.x (MLlib)
+- **Backend API**: FastAPI + Uvicorn
+- **Frontend Web**: Streamlit 1.28+
+- **Data**: Apache Parquet format
+- **Orchestration**: Docker + Docker Compose (optionnel)
 
 ## Architecture
 
-```text
+```
 sparkle-movie/
 ├── README.md
 ├── pyproject.toml
-├── Makefile
-├── requirements.txt
-├── data/
-│   ├── raw/
-│   │   ├── movies.csv
-│   │   ├── ratings.csv
-│   │   ├── tags.csv
-│   │   └── links.csv
-│   └── processed/
-│       ├── ratings_clean.parquet/
-│       └── movies_clean.parquet/
-├── models/
-│   ├── recommendations.csv
-│   └── recommendations.parquet/
-├── src/
-│   ├── __init__.py
-│   ├── preprocess.py  # CSV → Parquet
-│   └── train.py       # ALS training
+├── docker-compose.yml
+├── Dockerfile                 # Image API (avec Java pour Spark)
+├── Dockerfile.frontend        # Image Streamlit (légère)
 ├── api/
-│   ├── main.py        # FastAPI app
-│   ├── config.py      # Configuration
-│   ├── startup.py     # Spark resources
-│   ├── schemas.py     # Pydantic models
+│   ├── main.py               # Point d'entrée FastAPI
+│   ├── config.py             # Configuration
+│   ├── startup.py            # SparkResourceManager (Singleton)
+│   ├── schemas.py            # Modèles Pydantic
 │   ├── routes/
-│   │   └── recommendations.py
+│   │   └── recommendations.py  # Endpoints /api/*
 │   └── services/
-│       └── recommendation_service.py
-├── streamlit/
-│   ├── __init__.py
-│   ├── app.py         # Streamlit frontend
-│   ├── config.py      # Frontend config
-│   └── utils.py       # Utility functions
+│       └── recommendation_service.py  # Logique métier
+├── frontend/
+│   ├── app.py                # Application Streamlit
+│   ├── config.py             # Configuration (API_URL)
+│   └── utils.py              # Helpers (fetch_*)
+├── data/
+│   ├── raw_big/              # Données brutes MovieLens 235 MB
+│   ├── raw_small/            # Subset pour EDA
+│   └── processed/
+│       ├── ratings_clean.parquet/    # ⚠️ Non versionné (télécharger depuis Google Drive)
+│       └── movies_clean.parquet/     # ⚠️ Non versionné (télécharger depuis Google Drive)
+├── models/
+│   ├── als_model/            # Modèle ALS Spark sauvegardé
+│   └── recommendations.csv   # Recommandations pré-calculées
+├── src/
+│   ├── preprocess.py         # CSV → Parquet
+│   └── train.py              # Entraînement ALS
 ├── notebooks/
 │   ├── eda.ipynb
 │   └── model.ipynb
 └── tests/
 ```
 
-Responsabilites:
-- src: fonctions reutilisables Spark et utilitaires de chargement/nettoyage.
-- notebooks: experimentation, entrainement et evaluation.
-- data/raw_*: donnees brutes MovieLens.
-- data/processed: donnees nettoyees consommees par modelisation et API.
-- api: exposition HTTP des resultats via FastAPI.
+**Points clés:**
+- `api/main.py`: Point d'entrée FastAPI unique (routes avec préfixe `/api`)
+- `startup.py`: Gestion du cycle de vie Spark (lazy init, singleton)
+- `frontend/app.py`: Une page unique, design Netflix, appelle `/api/*`
+- Données Parquet (ratings_clean, movies_clean) doivent être présentes localement
 
-## Demarrage Rapide
+## Démarrage Rapide
 
-### 1) Prerequis systeme (WSL/Linux/macOS)
-Spark necessite Java:
+### 1) Prérequis systèmе
 
+Spark nécessite Java 17+:
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install openjdk-17-jdk unzip -y
+# macOS
+brew install openjdk@17
+java -version  # Doit afficher "openjdk version 17"
+
+# Linux (Ubuntu/Debian)
+sudo apt install openjdk-17-jdk-headless -y
 java -version
 ```
 
@@ -92,22 +84,82 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 source "$HOME/.cargo/env"
 ```
 
-### 3) Installation des dependances projet
+### 3) Clone et setup du projet
 
 ```bash
-uv sync
+git clone https://github.com/brunocoulet/sparkle-movie.git
+cd sparkle-movie
+git checkout app  # Branche avec API + Streamlit complets
+uv sync           # Installe toutes les dépendances
 ```
 
-### 4) Activation de l'environnement
+### 4) ⚠️ Données requises
 
+Les fichiers Parquet doivent être présents localement:
 ```bash
-source .venv/bin/activate
+# Télécharger depuis Google Drive et placer dans :
+data/processed/
+├── ratings_clean.parquet/
+└── movies_clean.parquet/
 ```
 
-### 5) Lancer Jupyter
+**Sans ces fichiers, l'API ne peut pas démarrer.**
+
+### 5) Lancer le système complet
+
+**Option A: En local (2 terminaux)**
+
+Terminal 1 - API FastAPI:
+```bash
+uv run uvicorn api.main:app --host 127.0.0.1 --port 8001
+```
+
+Terminal 2 - Frontend Streamlit:
+```bash
+uv run streamlit run frontend/app.py --server.port 8501
+```
+
+Puis ouvrir: http://127.0.0.1:8501
+
+**Option B: Avec Docker**
 
 ```bash
-uv run jupyter lab
+docker-compose up --build
+# API: http://localhost:8000
+# Streamlit: http://localhost:8501
+```
+
+## Endpoints API
+
+### `/api/statistiques`
+Statistiques globales du dataset.
+```bash
+curl http://127.0.0.1:8001/api/statistiques
+# {"total_users": 330975, "total_movies": 86537, "total_ratings": 33832162}
+```
+
+### `/api/recommandations/{user_id}`
+Recommandations ALS pour un utilisateur.
+```bash
+curl "http://127.0.0.1:8001/api/recommandations/1?limit=5"
+```
+
+### `/api/utilisateur/{user_id}/avis`
+Historique des avis d'un utilisateur.
+```bash
+curl "http://127.0.0.1:8001/api/utilisateur/1/avis?limit=10"
+```
+
+### `/api/genres`
+Genres populaires.
+```bash
+curl http://127.0.0.1:8001/api/genres
+```
+
+### `/docs`
+Documentation Swagger interactive.
+```
+http://127.0.0.1:8001/docs
 ```
 
 ## Donnees
@@ -143,47 +195,95 @@ Export modele ALS:
 - Le modele final est sauvegarde dans: artifacts/als_model
 - Cette sauvegarde sert de base de reutilisation pour l'API ou un job batch.
 
-## API FastAPI
+## Architecture Backend
 
-Le module [api/app.py](api/app.py) lit actuellement les donnees nettoyees depuis data/processed et expose:
-- /nombre_utilisateurs
-- /nombre_films_notes
-- /statistiques
-- /recommandations/{user_id}
-- /genres
-- /docs
+### API FastAPI (`api/main.py`)
 
-Lancer l'API:
+L'API expose des endpoints avec préfixe `/api`:
 
-```bash
-uv run uvicorn api.app:app --host 127.0.0.1 --port 8000
+```python
+app = FastAPI(title="Sparkle Movie API", version="1.0.0")
+app.include_router(recommendations_router)  # Préfixe: /api
 ```
 
-## Strategie ALS Pour Gros Volume
+**Middleware CORS:** Tous les domaines autorisés (configuré pour Streamlit).
 
-Pour un dataset tres grand, le pattern recommande est:
-1. entrainement ALS offline (Spark batch)
-2. generation offline d'un Top-10 par utilisateur
-3. lecture rapide de ce Top-10 par l'API
+**Lifespan:** Initialise Spark et les données au démarrage.
 
-Pourquoi:
-- eviter de recalculer ALS en temps reel dans une requete HTTP
-- stabiliser la latence API
-- mieux scaler horizontalement
+### SparkResourceManager (`api/startup.py`)
 
-Schema cible du dataset de recommandations:
-- userId
-- movieId
-- score
-- rank
-- run_date
+Singleton qui gère:
+- **Session Spark**: Lazy init avec `master("local[*")`, 4GB de RAM
+- **Cache**: Mémorisation en mémoire des DataFrames ratings/movies
+- **Recommandations**: Chargemement du CSV pré-calculé ou du modèle ALS
 
-## Feuille de Route
-1. ajouter un job batch qui genere recommandations_top10.parquet a partir du modele ALS.
-2. ajouter un endpoint API qui lit ces recommandations par userId.
-3. implementer un fallback cold-start (top populaires) si user inconnu.
+Exemple d'utilisation:
+```python
+spark = SparkResourceManager.get_spark_session()
+ratings_df, movies_df = SparkResourceManager.get_data()
+recs_df = SparkResourceManager.get_recommendations_df()
+```
+
+### Frontend Streamlit (`frontend/app.py`)
+
+Page unique style Netflix avec:
+- **Sidebar**: Sélection utilisateur, paramètres, stats globales
+- **Section 1**: Profil utilisateur (films notés, moyenne, meilleure/pire note)
+- **Section 2**: Historique des avis (tableau scrollable)
+- **Section 3**: Recommandations en grille visuelle
+
+**Configuration** (`frontend/config.py`):
+```python
+API_URL = "http://127.0.0.1:8001"  # À adapter en prod
+REQUEST_TIMEOUT = 30
+```
+
+**Utilitaires** (`frontend/utils.py`):
+```python
+@st.cache_data(ttl=300)
+def fetch_statistics() -> Optional[dict]:
+    """Récupère /api/statistiques avec cache 5min."""
+
+def fetch_recommendations(user_id: int, limit: int = 10) -> Optional[dict]:
+    """Récupère /api/recommandations/{user_id}."""
+```
+
+## Statut des branches
+
+| Branch | Contenu | État |
+|--------|---------|------|
+| `main` | Notebooks d'expérimentation, API basique | ✅ Fonctionnel |
+| `large` | Traitement du grand dataset sur Colab | ⏳ Non exécuté localement |
+| `app` | API + Streamlit complets | ✅ Production-ready |
+
+**Recommandation:** Travailler sur la branche `app` pour avoir l'interface + API complètes.
+
+## Données et artefacts
+
+### Dépendances non-versionnées (trop volumineux)
+
+- `data/processed/ratings_clean.parquet/` (~12 GB)
+- `data/processed/movies_clean.parquet/` (~100 MB)
+- `models/als_model/` (modèle Spark sauvegardé)
+- `models/recommendations.csv` (top-10 par utilisateur)
+
+**Localisation actuelle:** Google Drive (lien à demander à l'équipe)
+
+### Données versionnées
+
+- `data/raw_small/`: Subset MovieLens 100K (petit dataset de test)
+- Notebooks: EDA et entraînement ALS
+
+## Próchaines étapes
+
+1. **Optimisation Spark**: Tuner `spark.sql.shuffle.partitions` et mémoire driver
+2. **Cache Redis**: Remplacer le cache in-memory par Redis pour scalabilité
+3. **Authentification**: Ajouter API key / JWT si exposition internet
+4. **Monitoring**: Logs structurées JSON, endpoint `/metrics`
+5. **Tests**: Suite pytest pour endpoints + services
+6. **CI/CD**: Pipeline GitHub Actions (lint → test → docker build)
+>>>>>>> 4d71bd3 (Update: README + frontend config pour branche app avec grand dataset)
 
 ## Notes Implementation
 - Utiliser get_project_root() dans [src/utils.py](src/utils.py) pour des chemins robustes.
 - Garder le nettoyage dans EDA et la modelisation sur data/processed pour la reproductibilite.
-

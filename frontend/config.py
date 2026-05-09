@@ -13,7 +13,7 @@ PAGE_CONFIG = {
 }
 
 # URL de l'API backend
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8001"
 
 # Timeouts
 REQUEST_TIMEOUT = 30
