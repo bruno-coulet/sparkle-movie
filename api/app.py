@@ -8,9 +8,9 @@ Objectif:
 - fournir une API de recommandation personnalisée adaptée à un gros volume de données.
 """
 
-from typing import Any
 import sys
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, Query
 from pyspark.ml.recommendation import ALSModel
@@ -113,7 +113,7 @@ def home() -> dict[str, str]:
             "/recommandations/{user_id}": "Recommandations personnalisées ALS",
             "/genres": "Genres populaires",
             "/docs": "Documentation interactive (Swagger)",
-        }
+        },
     }
 
 
@@ -183,10 +183,12 @@ def get_genres_popularity() -> dict[str, Any]:
 
     genres = []
     for row in genres_df.collect():
-        genres.append({
-            "genre": row.genre,
-            "n_ratings": int(row.n_ratings),
-        })
+        genres.append(
+            {
+                "genre": row.genre,
+                "n_ratings": int(row.n_ratings),
+            }
+        )
 
     return {"genres": genres}
 
