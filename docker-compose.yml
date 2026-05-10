@@ -28,8 +28,8 @@ services:
       - "traefik.docker.network=traefik-network"
       - "traefik.http.routers.sparkle-api.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
       - "traefik.http.routers.sparkle-api.priority=100"
-      - "traefik.http.routers.sparkle-api.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
+      # - "traefik.http.routers.sparkle-api.entrypoints=websecure"
+      # - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
 
     networks:
@@ -57,6 +57,7 @@ services:
 
     environment:
       - API_URL=http://api:8000
+      - STREAMLIT_SERVER_BASE_URL_PATH=/sparkle-movie
 
     # Le frontend doit pouvoir communiquer avec l'API via le réseau interne de Docker
     networks:
@@ -68,8 +69,8 @@ services:
       - "traefik.docker.network=traefik-network"
       - "traefik.http.routers.sparkle-front.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
       - "traefik.http.routers.sparkle-front.priority=10"
-      - "traefik.http.routers.sparkle-front.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
+      # - "traefik.http.routers.sparkle-front.entrypoints=websecure"
+      # - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
       # Nettoie le préfixe pour Streamlit
       - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
