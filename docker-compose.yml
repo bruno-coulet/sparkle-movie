@@ -54,11 +54,10 @@ services:
       - traefik-network
     labels:
       - "traefik.enable=true"
-      # Remplace par ton vrai sous-domaine
-      - "traefik.http.routers.sparkle.rule=Host(`sparkle.ton-domaine.fr`)"
-      - "traefik.http.routers.sparkle.entrypoints=websecure"
-      - "traefik.http.routers.sparkle.tls.certresolver=myresolver"
+      - "traefik.http.routers.sparkle-front.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
+      - "traefik.http.routers.sparkle-front.entrypoints=websecure"
       - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
+      - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
 
 
 
