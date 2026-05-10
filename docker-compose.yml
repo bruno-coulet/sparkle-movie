@@ -12,13 +12,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    container_name: sparkle-movie-api
+    # On retire "ports:" car Traefik et le Frontend passent par le réseau interne
+    # ports:
+    #   - "8000:8000"
     volumes:
       - ./data:/app/data:ro
       - ./models:/app/models:ro
     environment:
       - PYTHONPATH=/app
+    
+    networks:
+      - default
+      - traefik-network
+
+  
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -31,11 +39,39 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    ports:
-      - "8501:8501"
+
+    container_name: sparkle-movie-frontend
+    # On retire "ports:" pour éviter les conflits, Traefik s'en occupe
+    # ports:
+    #   - "8501:8501"
+
     environment:
       - API_URL=http://api:8000
+
+    # Le frontend doit pouvoir communiquer avec l'API via le réseau interne de Docker
+    networks:
+      - default
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      # Remplace par ton vrai sous-domaine
+      - "traefik.http.routers.sparkle.rule=Host(`sparkle.ton-domaine.fr`)"
+      - "traefik.http.routers.sparkle.entrypoints=websecure"
+      - "traefik.http.routers.sparkle.tls.certresolver=myresolver"
+      - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
+
+
+
     depends_on:
       api:
         condition: service_healthy
     restart: unless-stopped
+
+# Traefik est géré séparément, on suppose qu'il est déjà configuré pour router vers le frontend
+networks:
+  # Le réseau interne au projet pour api <-> frontend
+  default:
+    driver: bridge
+  # Le réseau externe pour la communication avec Traefik
+  traefik-network:
+    external: true

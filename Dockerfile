@@ -13,8 +13,10 @@ FROM python:3.12-slim AS builder
 RUN pip install --no-cache-dir "uv>=0.4"
 
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-group dev
+COPY pyproject.toml uv.lock README.md ./
+# Ajoute --no-install-project 
+# Cela installe les dépendances SANS essayer d'installer le dossier /app lui-même
+RUN uv sync --frozen --no-dev --no-group dev --no-install-project
 
 # Stage 2 : runtime — image finale avec Java 17 (requis par PySpark)
 FROM python:3.12-slim AS runtime
