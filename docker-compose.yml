@@ -75,8 +75,8 @@ services:
       - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
       # Nettoie le préfixe pour Streamlit
-      - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
-      - "traefik.http.routers.sparkle-front.middlewares=sparkle-strip"
+      # - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
+      # - "traefik.http.routers.sparkle-front.middlewares=sparkle-strip"
 
 
 

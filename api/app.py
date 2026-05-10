@@ -22,7 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from utils import get_project_root, most_popular_genres, top_rated_movies
 
 # Création de l'app
-app = FastAPI(root_path="/sparkle-movie/api")
+app = FastAPI(
+    title="Sparkle Movie API",
+    description="API de recommandation de films basée sur Spark et le dataset MovieLens.",
+    root_path="/sparkle-movie/api",
+    openapi_url="/openapi.json" # Force le chemin relatif pour OpenAPI (Swagger)
+    )
 
 # Session Spark partagée (lazy initialization)
 _spark_session: SparkSession | None = None
