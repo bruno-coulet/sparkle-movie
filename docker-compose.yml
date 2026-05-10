@@ -2,9 +2,9 @@
 # Projet      : Sparkle Movie
 # Fichier     : docker-compose.yml
 # Description : Orchestre l'API FastAPI et le frontend Streamlit
-# Auteur      : Sulivan Moreau
-# Date        : 2026-04-19
-# Version     : 1.0.0
+# Auteurs      : Sulivan Moreau puis Bruno Coulet
+# Date        : 2026-05-10
+# Version     : 1.0.1
 # =============================================================================
 
 services:
@@ -22,6 +22,16 @@ services:
     environment:
       - PYTHONPATH=/app
     
+    labels:
+      - "traefik.enable=true"
+      # Force Traefik à utiliser ce réseau pour ce conteneur précis
+      - "traefik.docker.network=traefik-network"
+      # Routeur pour l'API
+      - "traefik.http.routers.sparkle-api.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
+      - "traefik.http.routers.sparkle-api.entrypoints=websecure"
+      - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
+      - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
+
     networks:
       - default
       - traefik-network
@@ -54,10 +64,12 @@ services:
       - traefik-network
     labels:
       - "traefik.enable=true"
+      # Force Traefik à utiliser ce réseau pour ce conteneur précis
+      - "traefik.docker.network=traefik-network"
       - "traefik.http.routers.sparkle-front.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
       - "traefik.http.routers.sparkle-front.entrypoints=websecure"
-      - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
       - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
+      - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
 
 
 
