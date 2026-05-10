@@ -31,6 +31,8 @@ services:
       - "traefik.http.routers.sparkle-api.entrypoints=websecure"
       - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.sparkle-api-strip.stripprefix.prefixes=/sparkle-movie/api"
+      - "traefik.http.routers.sparkle-api.middlewares=sparkle-api-strip"
 
     networks:
       - default
