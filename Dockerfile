@@ -2,9 +2,9 @@
 # Projet      : Sparkle Movie
 # Fichier     : Dockerfile
 # Description : Image Docker multi-stage pour l'API FastAPI + PySpark (Java 17)
-# Auteur      : Sulivan Moreau
-# Date        : 2026-04-19
-# Version     : 1.0.0
+# Auteur      : Sulivan Moreau Bruno Coulet
+# Date        : 2026-05-10
+# Version     : 1.0.1
 # =============================================================================
 
 # Stage 1 : builder — installe les dependances avec uv
@@ -19,12 +19,23 @@ RUN uv sync --frozen --no-dev --no-group dev
 # Stage 2 : runtime — image finale avec Java 17 (requis par PySpark)
 FROM python:3.12-slim AS runtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        openjdk-17-jre-headless \
-        curl \
-    && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# CETTE PARTIE EST COMMENTEE CAR LA VERSION 17 DE JAVA NE FONCTIONNE PAS AVEC PYSPARK 3.4.0
+# PySpark 3.4.0 est compatible avec Java 8, 11 et 17, mais il semble y avoir des problèmes de compatibilité spécifiques avec Java 17 sur certaines distributions Linux.
+# ET JE N'ARRIVE PAS A L'INSTALLER SUR LE VPS DE HETZNER (DEBIAN TRIXIE) CAR LA VERSION 17 N'EST PAS DISPONIBLE DANS LES REPOSITORIES OFFICIELS DE CETTE DISTRIBUTION
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#         openjdk-17-jre-headless \
+#         curl \
+#     && rm -rf /var/lib/apt/lists/*
+
+# On installe la version 21 qui est disponible sur Debian Trixie
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-21-jre-headless \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+# ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 WORKDIR /app
