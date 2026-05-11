@@ -26,13 +26,13 @@ services:
       - "traefik.enable=true"
       # Force Traefik à utiliser ce réseau pour ce conteneur précis
       - "traefik.docker.network=traefik-network"
-      - "traefik.http.routers.sparkle-api.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
-      - "traefik.http.routers.sparkle-api.priority=2000"
-      - "traefik.http.routers.sparkle-api.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
-      - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.sparkle-api-strip.stripprefix.prefixes=/sparkle-movie/api"
-      - "traefik.http.routers.sparkle-api.middlewares=sparkle-api-strip"
+      - "traefik.http.routers.sparkle-api-v2.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
+      - "traefik.http.routers.sparkle-api-v2.priority=2000"
+      - "traefik.http.routers.sparkle-api-v2.entrypoints=websecure"
+      - "traefik.http.routers.sparkle-api-v2.tls.certresolver=myresolver"
+      - "traefik.http.services.sparkle-api-v2.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.sparkle-api-v2-strip.stripprefix.prefixes=/sparkle-movie/api"
+      - "traefik.http.routers.sparkle-api-v2.middlewares=sparkle-api-v2-strip"
 
     networks:
       - default
@@ -69,11 +69,11 @@ services:
       - "traefik.enable=true"
       # Force Traefik à utiliser ce réseau pour ce conteneur précis
       - "traefik.docker.network=traefik-network"
-      - "traefik.http.routers.sparkle-front.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
-      - "traefik.http.routers.sparkle-front.priority=1000"
-      - "traefik.http.routers.sparkle-front.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
-      - "traefik.http.services.sparkle-front.loadbalancer.server.port=8501"
+      - "traefik.http.routers.sparkle-front-v2.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
+      - "traefik.http.routers.sparkle-front-v2.priority=1000"
+      - "traefik.http.routers.sparkle-front-v2.entrypoints=websecure"
+      - "traefik.http.routers.sparkle-front-v2.tls.certresolver=myresolver"
+      - "traefik.http.services.sparkle-front-v2.loadbalancer.server.port=8501"
       # Nettoie le préfixe pour Streamlit
       # - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
       # - "traefik.http.routers.sparkle-front.middlewares=sparkle-strip"
