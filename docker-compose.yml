@@ -27,7 +27,7 @@ services:
       # Force Traefik à utiliser ce réseau pour ce conteneur précis
       - "traefik.docker.network=traefik-network"
       - "traefik.http.routers.sparkle-api.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
-      - "traefik.http.routers.sparkle-api.priority=100"
+      - "traefik.http.routers.sparkle-api.priority=1000"
       - "traefik.http.routers.sparkle-api.entrypoints=websecure"
       - "traefik.http.routers.sparkle-api.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
@@ -70,7 +70,7 @@ services:
       # Force Traefik à utiliser ce réseau pour ce conteneur précis
       - "traefik.docker.network=traefik-network"
       - "traefik.http.routers.sparkle-front.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
-      - "traefik.http.routers.sparkle-front.priority=10"
+      - "traefik.http.routers.sparkle-front.priority=500"
       - "traefik.http.routers.sparkle-front.entrypoints=websecure"
       - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
       - "traefik.http.services.sparkle-front.loadbalancer.server.port=8501"
