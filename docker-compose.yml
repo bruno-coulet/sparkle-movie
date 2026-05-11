@@ -73,7 +73,7 @@ services:
       - "traefik.http.routers.sparkle-front.priority=10"
       - "traefik.http.routers.sparkle-front.entrypoints=websecure"
       - "traefik.http.routers.sparkle-front.tls.certresolver=myresolver"
-      - "traefik.http.services.sparkle.loadbalancer.server.port=8501"
+      - "traefik.http.services.sparkle-front.loadbalancer.server.port=8501"
       # Nettoie le préfixe pour Streamlit
       # - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
       # - "traefik.http.routers.sparkle-front.middlewares=sparkle-strip"
