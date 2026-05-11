@@ -26,7 +26,7 @@ app = FastAPI(
     title="Sparkle Movie API",
     description="API de recommandation de films basée sur Spark et le dataset MovieLens.",
     root_path="/sparkle-movie/api",
-    openapi_url="/openapi.json", # Force le chemin relatif pour OpenAPI (Swagger)
+    openapi_url="/openapi.json", # Force le chemin relatif pour OpenAPI (Swagger), fastAPI ajoute le rootpath devant automatiquement
     docs_url="/docs",
     )
 
