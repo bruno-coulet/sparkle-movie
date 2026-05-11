@@ -60,6 +60,7 @@ services:
     environment:
       - API_URL=http://api:8000
       - STREAMLIT_SERVER_BASE_URL_PATH=/sparkle-movie
+      - PYTHONPATH=/app
 
     # Le frontend doit pouvoir communiquer avec l'API via le réseau interne de Docker
     networks:
