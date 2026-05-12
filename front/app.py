@@ -3,7 +3,7 @@ Application Streamlit style Netflix pour l'API MovieLens Spark.
 Une page unique, design épuré et fluide.
 """
 
-import sys
+import sys, os
 from pathlib import Path
 
 # Ajouter le dossier frontend au sys.path pour les imports

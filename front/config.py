@@ -15,7 +15,8 @@ PAGE_CONFIG = {
 
 # URL de l'API backend
 # API_URL = "http://127.0.0.1:8001"
-API_URL = os.getenv("API_URL", "http://api:8000")
+# API_URL = os.getenv("API_URL", "http://api:8000")
+API_URL = os.getenv("API_URL", "https://api.sparkle-movie.lab.zanza-creation.com/api")
 
 # Timeouts
 REQUEST_TIMEOUT = 30

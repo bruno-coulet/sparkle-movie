@@ -1,6 +1,6 @@
 # =============================================================================
 # Projet      : Sparkle Movie
-# Fichier     : Dockerfile.frontend
+# Fichier     : Dockerfile.front
 # Description : Image Docker legere pour le frontend Streamlit (sans Java)
 # Auteur      : Sulivan Moreau
 # Date        : 2026-04-19
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 
 WORKDIR /app
 
-COPY frontend/ ./frontend/
+COPY front/ ./front/
 COPY .streamlit/ ./.streamlit/
 
 ENV API_URL=http://localhost:8000
@@ -26,4 +26,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     # CMD curl -f http://localhost:8501/_stcore/health || exit 1
     CMD curl -f http://localhost:8501/sparkle-movie/_stcore/health || exit 1
 
-CMD ["streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.baseUrlPath=/sparkle-movie/"]
+CMD ["streamlit", "run", "front/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.baseUrlPath=/sparkle-movie/"]

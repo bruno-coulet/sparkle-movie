@@ -1,44 +1,23 @@
-# =============================================================================
-# Projet      : Sparkle Movie
-# Fichier     : docker-compose.yml
-# Description : Orchestre l'API FastAPI et le frontend Streamlit
-# Auteurs      : Sulivan Moreau puis Bruno Coulet
-# Date        : 2026-05-10
-# Version     : 1.0.1
-# =============================================================================
-
 services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: sparkle-movie-api
-    # On retire "ports:" car Traefik et le Frontend passent par le réseau interne
-    # ports:
-    #   - "8000:8000"
+      dockerfile: Dockerfile.api
+    container_name: movie-api
     volumes:
       - ./data:/app/data:ro
       - ./models:/app/models:ro
     environment:
       - PYTHONPATH=/app
-    
     labels:
       - "traefik.enable=true"
-      # Force Traefik à utiliser ce réseau pour ce conteneur précis
-      - "traefik.docker.network=traefik-network"
-      - "traefik.http.routers.sparkle-api-v2.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie/api`)"
-      - "traefik.http.routers.sparkle-api-v2.priority=2000"
-      - "traefik.http.routers.sparkle-api-v2.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-api-v2.tls.certresolver=myresolver"
-      - "traefik.http.services.sparkle-api-v2.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.sparkle-api-v2-strip.stripprefix.prefixes=/sparkle-movie/api"
-      - "traefik.http.routers.sparkle-api-v2.middlewares=sparkle-api-v2-strip"
-
+      # Utilisation du sous-domaine dédié pour l'API
+      - "traefik.http.routers.movie-api.rule=Host(`api.sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.movie-api.entrypoints=websecure"
+      - "traefik.http.routers.movie-api.tls.certresolver=myresolver"
+      - "traefik.http.services.movie-api.loadbalancer.server.port=8000"
     networks:
-      - default
       - traefik-network
-
-  
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -50,47 +29,26 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
-
-    container_name: sparkle-movie-frontend
-    # On retire "ports:" pour éviter les conflits, Traefik s'en occupe
-    # ports:
-    #   - "8501:8501"
-
+      dockerfile: Dockerfile.front
+    container_name: movie-front
     environment:
-      - API_URL=http://api:8000
-      - STREAMLIT_SERVER_BASE_URL_PATH=/sparkle-movie
+      # On pointe sur l'URL publique pour que le navigateur du client puisse appeler l'API
+      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com/api
       - PYTHONPATH=/app
-
-    # Le frontend doit pouvoir communiquer avec l'API via le réseau interne de Docker
     networks:
-      - default
       - traefik-network
     labels:
       - "traefik.enable=true"
-      # Force Traefik à utiliser ce réseau pour ce conteneur précis
-      - "traefik.docker.network=traefik-network"
-      - "traefik.http.routers.sparkle-front-v2.rule=Host(`lab.zanza-creation.com`) && PathPrefix(`/sparkle-movie`)"
-      - "traefik.http.routers.sparkle-front-v2.priority=1000"
-      - "traefik.http.routers.sparkle-front-v2.entrypoints=websecure"
-      - "traefik.http.routers.sparkle-front-v2.tls.certresolver=myresolver"
-      - "traefik.http.services.sparkle-front-v2.loadbalancer.server.port=8501"
-      # Nettoie le préfixe pour Streamlit
-      # - "traefik.http.middlewares.sparkle-strip.stripprefix.prefixes=/sparkle-movie"
-      # - "traefik.http.routers.sparkle-front.middlewares=sparkle-strip"
-
-
-
+      # Utilisation du sous-domaine dédié pour le Front
+      - "traefik.http.routers.movie-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.movie-front.entrypoints=websecure"
+      - "traefik.http.routers.movie-front.tls.certresolver=myresolver"
+      - "traefik.http.services.movie-front.loadbalancer.server.port=8501"
     depends_on:
       api:
         condition: service_healthy
     restart: unless-stopped
 
-# Traefik est géré séparément, on suppose qu'il est déjà configuré pour router vers le frontend
 networks:
-  # Le réseau interne au projet pour api <-> frontend
-  default:
-    driver: bridge
-  # Le réseau externe pour la communication avec Traefik
   traefik-network:
     external: true

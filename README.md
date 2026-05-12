@@ -29,7 +29,7 @@ sparkle-movie/
 ├── pyproject.toml
 ├── docker-compose.yml
 ├── Dockerfile                 # Image API (avec Java pour Spark)
-├── Dockerfile.frontend        # Image Streamlit (légère)
+├── Dockerfile.front           # Image Streamlit (légère)
 ├── api/
 │   ├── main.py               # Point d'entrée FastAPI
 │   ├── config.py             # Configuration
@@ -39,7 +39,7 @@ sparkle-movie/
 │   │   └── recommendations.py  # Endpoints /api/*
 │   └── services/
 │       └── recommendation_service.py  # Logique métier
-├── frontend/
+├── front/
 │   ├── app.py                # Application Streamlit
 │   ├── config.py             # Configuration (API_URL)
 │   └── utils.py              # Helpers (fetch_*)
@@ -64,7 +64,7 @@ sparkle-movie/
 **Points clés:**
 - `api/main.py`: Point d'entrée FastAPI unique (routes avec préfixe `/api`)
 - `startup.py`: Gestion du cycle de vie Spark (lazy init, singleton)
-- `frontend/app.py`: Une page unique, design Netflix, appelle `/api/*`
+- `front/app.py`: Une page unique, design Netflix, appelle `/api/*`
 - Données Parquet (ratings_clean, movies_clean) doivent être présentes localement
 
 ## Démarrage Rapide
@@ -125,7 +125,7 @@ uv run uvicorn api.main:app --host 127.0.0.1 --port 8001
 
 Terminal 2 - Frontend Streamlit:
 ```bash
-uv run streamlit run frontend/app.py --server.port 8501
+uv run streamlit run front/app.py --server.port 8501
 ```
 
 Puis ouvrir: http://127.0.0.1:8501
@@ -233,7 +233,7 @@ ratings_df, movies_df = SparkResourceManager.get_data()
 recs_df = SparkResourceManager.get_recommendations_df()
 ```
 
-### Frontend Streamlit (`frontend/app.py`)
+### Frontend Streamlit (`front/app.py`)
 
 Page unique style Netflix avec:
 - **Sidebar**: Sélection utilisateur, paramètres, stats globales
@@ -241,13 +241,13 @@ Page unique style Netflix avec:
 - **Section 2**: Historique des avis (tableau scrollable)
 - **Section 3**: Recommandations en grille visuelle
 
-**Configuration** (`frontend/config.py`):
+**Configuration** (`front/config.py`):
 ```python
 API_URL = "http://127.0.0.1:8001"  # À adapter en prod
 REQUEST_TIMEOUT = 30
 ```
 
-**Utilitaires** (`frontend/utils.py`):
+**Utilitaires** (`front/utils.py`):
 ```python
 @st.cache_data(ttl=300)
 def fetch_statistics() -> Optional[dict]:

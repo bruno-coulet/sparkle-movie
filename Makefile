@@ -74,7 +74,7 @@ api:
 
 frontend:
 	@echo "🎨 Lancement de Streamlit sur http://localhost:8501"
-	streamlit run streamlit/app.py --logger.level=info
+	streamlit run front/app.py --logger.level=info
 
 run: stop
 	@echo "🔥 Démarrage du système complet..."

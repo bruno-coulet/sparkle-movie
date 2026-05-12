@@ -35,7 +35,7 @@ echo "📖 Documentation : http://localhost:8000/docs"
 # Lancer Streamlit en arrière-plan
 echo ""
 echo "🎬 Lancement du frontend Streamlit..."
-streamlit run frontend/app.py --logger.level=info > /tmp/streamlit.log 2>&1 &
+streamlit run front/app.py --logger.level=info > /tmp/streamlit.log 2>&1 &
 STREAMLIT_PID=$!
 sleep 3
 

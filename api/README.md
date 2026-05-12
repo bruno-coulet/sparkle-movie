@@ -38,7 +38,7 @@ Dans un second terminal :
 source .venv/bin/activate
 
 # Lancez l'application Streamlit
-streamlit run frontend/app.py
+streamlit run front/app.py
 ```
 
 Streamlit ouvrira automatiquement l'application dans votre navigateur sur `http://localhost:8501`
