@@ -3,6 +3,7 @@ Application Streamlit pour la visualisation des recommandations.
 
 Configuration de la page unique style Netflix.
 """
+import os
 
 # Configuration commune
 PAGE_CONFIG = {
@@ -13,7 +14,8 @@ PAGE_CONFIG = {
 }
 
 # URL de l'API backend
-API_URL = "http://127.0.0.1:8001"
+# API_URL = "http://127.0.0.1:8001"
+API_URL = os.getenv("API_URL", "http://api:8000")
 
 # Timeouts
 REQUEST_TIMEOUT = 30
