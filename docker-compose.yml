@@ -17,7 +17,7 @@ services:
       - "traefik.http.routers.movie-api.tls.certresolver=myresolver"
       - "traefik.http.services.movie-api.loadbalancer.server.port=8000"
     networks:
-      - traefik-network
+      - traefik
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -36,7 +36,7 @@ services:
       - API_URL=https://api.sparkle-movie.lab.zanza-creation.com/api
       - PYTHONPATH=/app
     networks:
-      - traefik-network
+      - traefik
     labels:
       - "traefik.enable=true"
       # Utilisation du sous-domaine dédié pour le Front
@@ -50,5 +50,5 @@ services:
     restart: unless-stopped
 
 networks:
-  traefik-network:
+  traefik:
     external: true
