@@ -7,7 +7,8 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from frontend.config import API_URL, REQUEST_TIMEOUT
+# from frontend.config import API_URL, REQUEST_TIMEOUT
+from config import API_URL, REQUEST_TIMEOUT
 
 
 @st.cache_data(ttl=300)
