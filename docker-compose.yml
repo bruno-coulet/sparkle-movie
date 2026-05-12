@@ -11,6 +11,7 @@ services:
       - PYTHONPATH=/app
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
       # Utilisation du sous-domaine dédié pour l'API
       - "traefik.http.routers.movie-api.rule=Host(`api.sparkle-movie.lab.zanza-creation.com`)"
       - "traefik.http.routers.movie-api.entrypoints=websecure"
@@ -39,6 +40,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
       # Utilisation du sous-domaine dédié pour le Front
       - "traefik.http.routers.movie-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
       - "traefik.http.routers.movie-front.entrypoints=websecure"
