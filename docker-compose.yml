@@ -34,7 +34,7 @@ services:
     container_name: movie-front
     environment:
       # On pointe sur l'URL publique pour que le navigateur du client puisse appeler l'API
-      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com/api
+      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com
       - PYTHONPATH=/app
     networks:
       - traefik
