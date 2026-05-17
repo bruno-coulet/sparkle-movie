@@ -42,9 +42,9 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       # Utilisation du sous-domaine dédié pour le Front
-      - "traefik.http.routers.movie-front_.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
-      - "traefik.http.routers.movie-front_.entrypoints=websecure"
-      - "traefik.http.routers.movie-front_.tls.certresolver=myresolver"
+      - "traefik.http.routers.movie-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.movie-front.entrypoints=websecure"
+      - "traefik.http.routers.movie-front.tls.certresolver=myresolver"
       - "traefik.http.services.movie-front.loadbalancer.server.port=8501"
     depends_on:
       api:
