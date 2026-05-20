@@ -121,7 +121,25 @@ st.markdown(
             border-radius: 12px; padding: 40px; margin-bottom: 40px; border: 1px solid #333;">
     <h1 style="color: #FF6B6B; font-size: 2.5rem; margin: 0;">Sparkle Movie</h1>
     <p style="color: #B3B3B3; font-size: 1.1rem; margin: 10px 0 0 0;">
-        Recommandations cinéma basées sur le machine learning
+        Exercice  d'entrainement et de déploiement d'un algorithme de recommandation de film<br>
+        Basé sur le jeu de données <a href="https://grouplens.org/datasets/movielens/" target="blank">MovieLens</a> - 335 Mb<br>
+        Modèle de recommandation : ALS (Alternating Least Squares) - Spark MLlib<br>
+        Recommandations personnalisées basées sur les avis de l'utilisateur
+    </p>
+    <ul style="color: #B3B3B3; font-size: 1rem; margin: 20px 0 0 20px;">     
+        <li>Utilisateurs uniques : 330 975</li>
+        <li>Films uniques : 83 239</li>
+        <li>Avis : 33 832 162</li>
+        <li>Densite Utilisateur-Avis : 0.001228</li>
+    </ul>
+    <p style="color: #B3B3B3; font-size: 0.9rem; margin: 20px 0 0 0;">
+        ALS est un algorithme de factorisation matricielle qui apprend des représentations latentes pour les utilisateurs et les films, permettant de prédire les notes manquantes et de générer des recommandations personnalisées.<br>
+        Les recommandations sont basées sur les avis de l'utilisateur, en identifiant des utilisateurs similaires<br>
+        et en recommandant des films qu'ils ont appréciés mais que l'utilisateur n'a pas encore vus.    
+    </p>
+    <p style="color: #B3B3B3; font-size: 0.9rem; margin: 20px 0 0 0;">
+    Sélectionnez un utilisateru dans la barre latérale gauche pour voir son profil, ses avis récents et les recommandations personnalisées basées sur le modèle ALS.<br>
+    Sélectionnez le nombre de recommandations souhaité pour ajuster la quantité de films recommandés affichés.
     </p>
 </div>
 """,
