@@ -1,9 +1,9 @@
 services:
-  api:
+  movies-api:
     build:
       context: .
       dockerfile: Dockerfile.api
-    container_name: movie-api
+    container_name: movies-api
     volumes:
       - ./data:/app/data:ro
       - ./models:/app/models:ro
@@ -13,10 +13,10 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       # Utilisation du sous-domaine dédié pour l'API
-      - "traefik.http.routers.movie-api.rule=Host(`api.sparkle-movie.lab.zanza-creation.com`)"
-      - "traefik.http.routers.movie-api.entrypoints=websecure"
-      - "traefik.http.routers.movie-api.tls.certresolver=myresolver"
-      - "traefik.http.services.movie-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.movies-api.rule=Host(`api.sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.movies-api.entrypoints=websecure"
+      - "traefik.http.routers.movies-api.tls.certresolver=myresolver"
+      - "traefik.http.services.movies-api.loadbalancer.server.port=8000"
     networks:
       - traefik
     healthcheck:
@@ -27,11 +27,11 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  frontend:
+  movies-front:
     build:
       context: .
       dockerfile: Dockerfile.front
-    container_name: movie-front
+    container_name: movies-front
     environment:
       # On pointe sur l'URL publique pour que le navigateur du client puisse appeler l'API
       - API_URL=https://api.sparkle-movie.lab.zanza-creation.com
@@ -42,12 +42,12 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       # Utilisation du sous-domaine dédié pour le Front
-      - "traefik.http.routers.movie-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
-      - "traefik.http.routers.movie-front.entrypoints=websecure"
-      - "traefik.http.routers.movie-front.tls.certresolver=myresolver"
-      - "traefik.http.services.movie-front.loadbalancer.server.port=8501"
+      - "traefik.http.routers.movies-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.movies-front.entrypoints=websecure"
+      - "traefik.http.routers.movies-front.tls.certresolver=myresolver"
+      - "traefik.http.services.movies-front.loadbalancer.server.port=8501"
     depends_on:
-      api:
+      movies-api:
         condition: service_healthy
     restart: unless-stopped
 

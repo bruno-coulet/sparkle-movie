@@ -6,6 +6,7 @@ Une page unique, design épuré et fluide.
 import sys, os
 from pathlib import Path
 
+
 # Ajouter le dossier frontend au sys.path pour les imports
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -89,16 +90,15 @@ st.markdown(
 # ============================================================================
 
 with st.sidebar:
-    st.title("Sparkle Movie")
     st.divider()
 
     st.subheader("Paramètres")
 
     user_id = st.number_input(
-        label="Sélectionner un utilisateur", min_value=1, max_value=610, value=1, step=1
+        label="Sélectionnez un identifiant d'utilisateur", min_value=1, max_value=610, value=1, step=1
     )
 
-    limit_reco = st.slider("Nombre de recommandations", min_value=4, max_value=20, value=8, step=1)
+    limit_reco = st.slider("Sélectionnez le nombre de films à recommandés", min_value=4, max_value=20, value=8, step=1)
 
     st.divider()
 
@@ -106,9 +106,9 @@ with st.sidebar:
     st.subheader("Dataset")
     stats = fetch_statistics()
     if stats:
-        st.metric("Utilisateurs", f"{stats['total_users']:,}")
-        st.metric("Films", f"{stats['total_movies']:,}")
-        st.metric("Avis", f"{stats['total_ratings']:,}")
+        st.metric("Utilisateurs", f"{stats['total_users']:,}".replace(",", " "))
+        st.metric("Films", f"{stats['total_movies']:,}".replace(",", " "))
+        st.metric("Avis", f"{stats['total_ratings']:,}".replace(",", " "))
 
 # ============================================================================
 # MAIN CONTENT - UNE PAGE NETFLIX STYLE
@@ -119,27 +119,28 @@ st.markdown(
     """
 <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); 
             border-radius: 12px; padding: 40px; margin-bottom: 40px; border: 1px solid #333;">
-    <h1 style="color: #FF6B6B; font-size: 2.5rem; margin: 0;">Sparkle Movie</h1>
-    <p style="color: #B3B3B3; font-size: 1.1rem; margin: 10px 0 0 0;">
+    <h1 style="color: #FF6B6B; font-size: 2.5rem; margin: 0;">Recommandations de films</h1>
+    <p style="color: #E0D6D6; font-size: 1.1rem; margin: 10px 0 0 0;">
         Exercice  d'entrainement et de déploiement d'un algorithme de recommandation de film<br>
-        Basé sur le jeu de données <a href="https://grouplens.org/datasets/movielens/" target="blank">MovieLens</a> - 335 Mb<br>
+        Basé sur le jeu de données <a href="https://grouplens.org/datasets/movielens/" target="blank">MovieLens</a> - 335 MB<br>
         Modèle de recommandation : ALS (Alternating Least Squares) - Spark MLlib<br>
         Recommandations personnalisées basées sur les avis de l'utilisateur
     </p>
-    <ul style="color: #B3B3B3; font-size: 1rem; margin: 20px 0 0 20px;">     
-        <li>Utilisateurs uniques : 330 975</li>
-        <li>Films uniques : 83 239</li>
-        <li>Avis : 33 832 162</li>
+    <ul style="color: #E0D6D6; font-size: 1rem; margin: 20px 0 0 20px;">     
+        <li>.  330 975 utilisateurs uniques</li>
+        <li>    83 239 films uniques</li>
+        <li>33 832 162 avis</li>
         <li>Densite Utilisateur-Avis : 0.001228</li>
     </ul>
-    <p style="color: #B3B3B3; font-size: 0.9rem; margin: 20px 0 0 0;">
-        ALS est un algorithme de factorisation matricielle qui apprend des représentations latentes pour les utilisateurs et les films, permettant de prédire les notes manquantes et de générer des recommandations personnalisées.<br>
-        Les recommandations sont basées sur les avis de l'utilisateur, en identifiant des utilisateurs similaires<br>
+    <p style="color: #E0D6D6; font-size: 1em; margin: 20px 0 0 0;">
+        ALS est un algorithme de factorisation matricielle qui apprend des représentations latentes pour les utilisateurs et les films<br>
+        Il permet de prédire les notes manquantes et de générer des recommandations personnalisées.<br>
+        Les recommandations sont basées sur les avis de l'utilisateur, en identifiant des utilisateurs qui ont des goûts similaires<br>
         et en recommandant des films qu'ils ont appréciés mais que l'utilisateur n'a pas encore vus.    
     </p>
-    <p style="color: #B3B3B3; font-size: 0.9rem; margin: 20px 0 0 0;">
-    Sélectionnez un utilisateru dans la barre latérale gauche pour voir son profil, ses avis récents et les recommandations personnalisées basées sur le modèle ALS.<br>
-    Sélectionnez le nombre de recommandations souhaité pour ajuster la quantité de films recommandés affichés.
+    <p style="color: #FF6B6B; font-size: 1.2rem; margin: 20px 0 0 0;">
+    Sélectionnez un utilisateur dans la barre latérale gauche pour voir son profil, ses avis récents et les recommandations personnalisées basées sur le modèle ALS.<br>
+    Sélectionnez le nombre de recommandations souhaité pour ajuster le nombre de recommandations affichées.
     </p>
 </div>
 """,
