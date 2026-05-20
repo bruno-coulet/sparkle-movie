@@ -92,18 +92,18 @@ st.markdown(
 with st.sidebar:
     st.divider()
 
-    st.subheader("Paramètres")
+    st.subheader("Sélectionnez les Paramètres")
 
     user_id = st.number_input(
-        label="Sélectionnez un identifiant d'utilisateur", min_value=1, max_value=610, value=1, step=1
+        label="Identifiant d'utilisateur", min_value=1, max_value=610, value=1, step=1
     )
 
-    limit_reco = st.slider("Sélectionnez le nombre de films à recommandés", min_value=4, max_value=20, value=8, step=1)
+    limit_reco = st.slider("Nombre de recommandations", min_value=4, max_value=20, value=8, step=1)
 
     st.divider()
 
     # Stats globales en sidebar
-    st.subheader("Dataset")
+    st.subheader("Jeu de données utilisé :")
     stats = fetch_statistics()
     if stats:
         st.metric("Utilisateurs", f"{stats['total_users']:,}".replace(",", " "))
@@ -121,26 +121,15 @@ st.markdown(
             border-radius: 12px; padding: 40px; margin-bottom: 40px; border: 1px solid #333;">
     <h1 style="color: #FF6B6B; font-size: 2.5rem; margin: 0;">Recommandations de films</h1>
     <p style="color: #E0D6D6; font-size: 1.1rem; margin: 10px 0 0 0;">
-        Exercice  d'entrainement et de déploiement d'un algorithme de recommandation de film<br>
+        Entrainement du modèle de recommandation ALS (Alternating Least Squares)<br>
         Basé sur le jeu de données <a href="https://grouplens.org/datasets/movielens/" target="blank">MovieLens</a> - 335 MB<br>
-        Modèle de recommandation : ALS (Alternating Least Squares) - Spark MLlib<br>
-        Recommandations personnalisées basées sur les avis de l'utilisateur
     </p>
-    <ul style="color: #E0D6D6; font-size: 1rem; margin: 20px 0 0 20px;">     
-        <li>.  330 975 utilisateurs uniques</li>
-        <li>    83 239 films uniques</li>
-        <li>33 832 162 avis</li>
-        <li>Densite Utilisateur-Avis : 0.001228</li>
-    </ul>
     <p style="color: #E0D6D6; font-size: 1em; margin: 20px 0 0 0;">
-        ALS est un algorithme de factorisation matricielle qui apprend des représentations latentes pour les utilisateurs et les films<br>
-        Il permet de prédire les notes manquantes et de générer des recommandations personnalisées.<br>
         Les recommandations sont basées sur les avis de l'utilisateur, en identifiant des utilisateurs qui ont des goûts similaires<br>
         et en recommandant des films qu'ils ont appréciés mais que l'utilisateur n'a pas encore vus.    
     </p>
     <p style="color: #FF6B6B; font-size: 1.2rem; margin: 20px 0 0 0;">
-    Sélectionnez un utilisateur dans la barre latérale gauche pour voir son profil, ses avis récents et les recommandations personnalisées basées sur le modèle ALS.<br>
-    Sélectionnez le nombre de recommandations souhaité pour ajuster le nombre de recommandations affichées.
+    Définissez les paramètres dans la barre latérale gauche
     </p>
 </div>
 """,
@@ -152,7 +141,7 @@ st.markdown(
 # ============================================================================
 
 st.markdown(
-    '<div class="section-title">Votre Profil (Utilisateur #' + str(user_id) + ")</div>",
+    '<div class="section-title">Utilisateur #' + str(user_id) + "</div>",
     unsafe_allow_html=True,
 )
 
@@ -214,7 +203,7 @@ if user_ratings and user_ratings.get("avis"):
 # SECTION 2 : AVIS UTILISATEUR
 # ============================================================================
 
-st.markdown('<div class="section-title">Vos Avis Récents</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Avis Récents de l\'utilisateur #' + str(user_id) + "</div>", unsafe_allow_html=True)
 
 if user_ratings and user_ratings.get("avis"):
     avis_list = user_ratings["avis"][:15]  # Top 15 avis récents
@@ -238,7 +227,7 @@ else:
 # SECTION 3 : RECOMMANDATIONS EN CARTES
 # ============================================================================
 
-st.markdown('<div class="section-title">Pour vous</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Recommandations pour l\'utilisateur #' + str(user_id) + "</div>", unsafe_allow_html=True)
 
 with st.spinner("Calcul des recommandations..."):
     recommendations = fetch_recommendations(user_id, limit=limit_reco)
@@ -259,13 +248,17 @@ if recommendations and recommendations.get("recommendations"):
                 score = movie.get("predicted_rating", 0)
                 rank = i + col_idx + 1
 
+                # === NETTOYAGE DU TITRE pour enlver l'année ===
+                clean_title = movie["title"].split(" (")[0]
+                short_title = clean_title[:30]
+
                 with col:
                     st.markdown(
                         f"""
                     <div class="movie-card">
-                        <p style="font-size: 2rem; color: #FF6B6B; margin: 0; font-weight: bold;">#{rank}</p>
-                        <p style="color: white; font-size: 1rem; margin: 15px 0 10px 0; font-weight: bold; line-height: 1.3;">
-                            {movie["title"][:30]}
+                        <p style="font-size: 1.5rem; color: #FF6B6B; margin: 0; font-weight: bold;">#{rank}</p>
+                        <p style="color: white; font-size: 1.5rem; margin: 15px 0 10px 0; font-weight: bold; line-height: 1.3;">
+                            {short_title}
                         </p>
                         <p style="color: #B3B3B3; font-size: 0.9rem; margin: 0;">Score ALS</p>
                         <p style="color: #FF6B6B; font-size: 1.5rem; margin: 8px 0 0 0; font-weight: bold;">
