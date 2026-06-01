@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.sparkle-api.tls=true"
       - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
     networks:
-      - web # Ton réseau Traefik commun
+      - traefik
     volumes:
       - ./data:/app/data:ro
       - ./models:/app/models:ro
@@ -47,3 +47,7 @@ services:
       api:
         condition: service_healthy
     restart: unless-stopped
+
+networks:
+  traefik:
+    external: true
