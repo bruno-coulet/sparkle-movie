@@ -13,7 +13,7 @@ FROM python:3.12-slim AS builder
 RUN pip install --no-cache-dir "uv>=0.4"
 
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-group dev
 
 # Stage 2 : runtime — image finale avec Java 17 (requis par PySpark)
