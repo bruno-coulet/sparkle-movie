@@ -2,8 +2,8 @@
 # Projet      : Sparkle Movie
 # Fichier     : docker-compose.yml
 # Description : Orchestre l'API FastAPI et le frontend Streamlit
-# Auteur      : Sulivan Moreau
-# Date        : 2026-04-19
+# Auteur      : Bruno Coulet
+# Date        : 2026-06-02
 # Version     : 1.0.0
 # =============================================================================
 
@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     environment:
-      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com
+      # - API_URL=https://api.sparkle-movie.lab.zanza-creation.com, ell est dans frontend//config.py
       - PYTHONPATH=/app
     labels:
       - "traefik.enable=true"
