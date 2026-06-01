@@ -40,7 +40,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    # Supprime la section ports
+    environment:
+      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com
+      - PYTHONPATH=/app
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.sparkle-front.rule=Host(`sparkle-movie.lab.zanza-creation.com`)"
@@ -49,8 +51,6 @@ services:
       - "traefik.http.services.sparkle-front.loadbalancer.server.port=8501"
     networks:
       - traefik
-    environment:
-      - API_URL=https://api.sparkle-movie.lab.zanza-creation.com # Utilise HTTPS maintenant !
     depends_on:
       api:
         condition: service_healthy
