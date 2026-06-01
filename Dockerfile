@@ -17,14 +17,25 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-group dev
 
 # Stage 2 : runtime — image finale avec Java 17 (requis par PySpark)
+# FROM python:3.12-slim AS runtime
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#         openjdk-17-jre-headless \
+#         curl \
+#     && rm -rf /var/lib/apt/lists/*
+
+# ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# ENV PATH="${JAVA_HOME}/bin:${PATH}"
+# Stage 2 : runtime — image finale avec Java 21 (requis par PySpark)
 FROM python:3.12-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        openjdk-17-jre-headless \
+        openjdk-21-jre-headless \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# Mise à jour du chemin JAVA_HOME pour pointer vers Java 21
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 WORKDIR /app
