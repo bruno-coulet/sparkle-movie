@@ -12,8 +12,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sparkle-api.rule=Host(`api.sparkle-movie.lab.zanza-creation.com`)"
+      - "traefik.http.routers.sparkle-api.entrypoints=websecure"
+      - "traefik.http.routers.sparkle-api.tls=true"
+      - "traefik.http.services.sparkle-api.loadbalancer.server.port=8000"
+    networks:
+      - web # Ton réseau Traefik commun
     volumes:
       - ./data:/app/data:ro
       - ./models:/app/models:ro
