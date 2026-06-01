@@ -1,0 +1,121 @@
+.
+├── Dockerfile
+├── Dockerfile.frontend
+├── Makefile
+├── README.md
+├── api
+│   ├── README.md
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   └── app.cpython-312.pyc
+│   ├── app.py
+│   ├── config.py
+│   ├── main.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   └── recommendations.py
+│   ├── schemas.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   └── recommendation_service.py
+│   └── startup.py
+├── data
+│   ├── processed
+│   │   ├── movies_clean.parquet
+│   │   │   ├── _SUCCESS
+│   │   │   └── part-00000-a2c31b78-bbd6-40eb-bdc8-2db5f955932d-c000.snappy.parquet
+│   │   ├── ratings_clean.parquet
+│   │   │   ├── _SUCCESS
+│   │   │   └── part-00000-caddd148-5661-4166-b32c-6dbe80635e6c-c000.snappy.parquet
+│   │   └── small
+│   │       ├── movies_clean.parquet
+│   │       │   ├── _SUCCESS
+│   │       │   └── part-00000-7093e468-b7fb-4372-bffa-7ceaf4fe1af2-c000.snappy.parquet
+│   │       ├── ratings_clean.parquet
+│   │       │   ├── _SUCCESS
+│   │       │   └── part-00000-b0d60630-68a5-402c-a339-f92dd40e5a7d-c000.snappy.parquet
+│   │       └── splits_temporal
+│   │           ├── test
+│   │           │   ├── _SUCCESS
+│   │           │   └── part-00000-b09a0ddb-b8e5-4462-8b9f-caad5f5ee9bf-c000.snappy.parquet
+│   │           ├── train
+│   │           │   ├── _SUCCESS
+│   │           │   └── part-00000-d385a1fd-c13e-4c16-8e49-b81f629cf300-c000.snappy.parquet
+│   │           └── validation
+│   │               ├── _SUCCESS
+│   │               └── part-00000-5d98b8c5-9048-4764-88c1-7c9481027208-c000.snappy.parquet
+│   ├── raw_big
+│   └── raw_small
+│       ├── README.txt
+│       ├── links.csv
+│       ├── movies.csv
+│       ├── ratings.csv
+│       └── tags.csv
+├── docker-compose.yml
+├── frontend
+│   ├── app.py
+│   ├── config.py
+│   └── utils.py
+├── models
+│   ├── als_model
+│   │   ├── itemFactors
+│   │   │   ├── _SUCCESS
+│   │   │   ├── part-00000-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00001-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00002-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00003-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00004-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00005-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00006-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00007-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   ├── part-00008-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   │   └── part-00009-3001c71e-1d74-4fd3-9000-1447465a0eaa-c000.snappy.parquet
+│   │   ├── metadata
+│   │   │   ├── _SUCCESS
+│   │   │   └── part-00000
+│   │   └── userFactors
+│   │       ├── _SUCCESS
+│   │       ├── part-00000-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00001-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00002-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00003-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00004-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00005-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00006-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00007-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       ├── part-00008-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   │       └── part-00009-6eb7d613-10e4-41b6-b972-1b1496dccb80-c000.snappy.parquet
+│   ├── recommendations.csv
+│   └── recommendations.parquet
+│       ├── _SUCCESS
+│       ├── part-00000-fd5e14b7-c208-4375-898d-9a643b8e11b0-c000.snappy.parquet
+│       ├── part-00001-fd5e14b7-c208-4375-898d-9a643b8e11b0-c000.snappy.parquet
+│       ├── part-00002-fd5e14b7-c208-4375-898d-9a643b8e11b0-c000.snappy.parquet
+│       └── part-00003-fd5e14b7-c208-4375-898d-9a643b8e11b0-c000.snappy.parquet
+├── notebooks
+│   ├── eda.ipynb
+│   ├── eda_large.ipynb
+│   ├── model.ipynb
+│   ├── model_large.ipynb
+│   └── model_large_finetune.ipynb
+├── pyproject.toml
+├── requirements.txt
+├── run.sh
+├── slides.md
+├── src
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── import.cpython-312.pyc
+│   │   └── utils.cpython-312.pyc
+│   ├── preprocess.py
+│   ├── test.py
+│   └── train.py
+├── structure.txt
+├── test.py
+├── tests
+│   └── test_api.py
+└── uv.lock
+
+29 directories, 90 files
